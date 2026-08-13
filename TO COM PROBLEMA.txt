@@ -31,7 +31,7 @@ o passo 3 sozinho já separa "instalei errado" de "gravei errado".
      - Selecione os dois
      - Rode o playthrough_sync_video
 
-   Tem que dar exatamente +3000.0 ms no console.
+   Tem que dar +3000.0 ms no console. Variar 1 ou 2 ms é normal.
 
    DEU 3000: a instalação está boa. O problema está na sua gravação,
    e em quase todos os casos é o golpe nas cordas (veja o LEIA-ME,

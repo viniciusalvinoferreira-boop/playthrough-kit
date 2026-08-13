@@ -1,5 +1,38 @@
 # Mudanças
 
+## v1.2
+
+Correções encontradas no primeiro teste real de instalação via ReaPack.
+
+**Compensação do priming do AAC**
+
+Encoders AAC inserem 1024 samples de silêncio no início do stream, o que dá
+21,33 ms a 48 kHz. O REAPER não descarta esse bloco ao entregar o áudio pelo
+audio accessor, então o áudio do vídeo chegava ~21 ms atrasado em relação à
+imagem, e o alinhamento herdava o erro.
+
+Na prática são menos de um frame a 30 fps, e o erro caía na direção tolerável
+(imagem levemente à frente do som). Mas corrigir devolve ao teste embutido a
+propriedade de dar um número exato, que é o que faz dele um verificador útil.
+
+Configurável em `VIDEO_AUDIO_OFFSET_MS`, no topo do script de sync.
+
+**Falso "NAO ENCONTRADO" no diagnóstico**
+
+O diagnóstico procurava os scripts num caminho fixo (`Scripts\`), que é onde o
+`INSTALAR.bat` põe. Quem instala pelo ReaPack recebe os arquivos numa subpasta
+própria dele, e via três "NAO ENCONTRADO" mesmo com tudo funcionando.
+
+Agora o script pergunta onde ele mesmo está e procura os irmãos ali do lado, o
+que funciona nos dois modos de instalação.
+
+**Outros**
+
+- `GetAppVersion()` devolve um valor só. O relatório mostrava um `nil` ao lado
+  da versão do REAPER
+- O relatório agora aponta a URL do repositório, porque quem instala pelo
+  ReaPack não recebe o `CONTEXTO-IA.md`, o `LEIA-ME.md` nem a pasta `Teste/`
+
 ## v1.1
 
 Foco em self-service: reduzir o número de casos que precisam de ajuda humana.

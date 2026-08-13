@@ -92,7 +92,7 @@ echo    File ^> Project templates ^> Playthrough
 echo.
 echo  DEPOIS DISSO, TESTE: a pasta Teste\ tem dois arquivos com
 echo  deslocamento conhecido. Arraste os dois pro REAPER na posicao 0,
-echo  selecione os dois e rode o sync. Tem que dar +3000.0 ms.
+echo  selecione os dois e rode o sync. Tem que dar perto de +3000.0 ms.
 echo  Se der, a instalacao esta redonda.
 echo.
 echo  Leia o LEIA-ME.md antes do primeiro take. Tem uma parte sobre o

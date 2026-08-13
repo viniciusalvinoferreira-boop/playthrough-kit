@@ -21,7 +21,9 @@ já com os códigos de erro relevantes. Peça o texto inteiro.
 
 **2. O resultado do teste embutido.** A pasta `Teste/` tem dois arquivos com
 deslocamento conhecido de 3 segundos. Arrastados pro REAPER na posição 0 e
-sincronizados, o console tem que mostrar `+3000.0 ms`.
+sincronizados, o console tem que mostrar `+3000.0 ms`, com variação normal de 1
+ou 2 ms. Quem instalou pelo ReaPack não recebe esses arquivos: eles estão no
+repositório, em `Teste/`.
 
 Esse teste é o divisor de águas do diagnóstico:
 
@@ -154,6 +156,30 @@ sync lê o áudio direto do arquivo pelo `AudioAccessor`, o que funciona
 normalmente com a track mutada. Mutada, o mic da câmera não vaza pro mix
 final. Se alguém desmutar pra conferir o alinhamento, precisa mutar de novo
 antes de exportar.
+
+**`VIDEO_AUDIO_OFFSET_MS = 21.3` no sync.** Compensação do priming do AAC, e
+não é um número inventado.
+
+Encoders AAC inserem um bloco de silêncio no início do stream, chamado priming,
+tipicamente de 1024 samples. A 48 kHz isso dá 21,33 ms. Players que leem o
+metadado descartam o bloco; o REAPER **não descarta** ao entregar o áudio pelo
+audio accessor. Resultado: o áudio do vídeo chega no script cerca de 21 ms
+atrasado em relação à imagem, e sem compensar, o alinhamento herda esse erro.
+
+Dá pra verificar em qualquer arquivo com
+`ffprobe -show_entries stream=initial_padding`.
+
+Se o áudio do vídeo for PCM (alguns `.mov`), o valor certo é `0`. Se for AAC a
+44,1 kHz, é `23.2` (1024 / 44100).
+
+Não remova essa compensação achando que é gambiarra. Sem ela o sync erra 21 ms
+de forma sistemática em qualquer vídeo de celular.
+
+**Onde o ReaPack instala.** Não é a mesma pasta do `INSTALAR.bat`. O instalador
+põe em `Scripts\`, o ReaPack põe numa subpasta própria dele. Por isso o
+diagnóstico localiza os arquivos via `get_action_context()` (onde eu mesmo
+estou) em vez de checar um caminho fixo. Checar caminho fixo dava falso
+"NAO ENCONTRADO" pra quem tinha instalado corretamente pelo ReaPack.
 
 ---
 

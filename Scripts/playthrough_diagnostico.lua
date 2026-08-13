@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: diagnostico
--- @version 1.1
+-- @version 1.2
 -- @author Vinicius Alvino
 -- @about
 --   Relatorio de ambiente pra quando algo nao funciona. Nao altera nada no
@@ -7,7 +7,7 @@
 
 --[[
   playthrough_diagnostico.lua
-  Playthrough Kit v1.1
+  Playthrough Kit v1.2
 
   Nao muda nada no seu projeto. Só olha o ambiente e escreve um relatorio no
   console do REAPER.
@@ -119,19 +119,28 @@ say(" PLAYTHROUGH KIT - RELATORIO DE AMBIENTE")
 say("========================================")
 say()
 
-local ver, arch = reaper.GetAppVersion()
-say("REAPER            : " .. tostring(ver) .. "  " .. tostring(arch))
+-- GetAppVersion devolve UM valor so ("7.73/x64"), nao dois
+local ver = reaper.GetAppVersion()
+say("REAPER            : " .. tostring(ver))
 say("Pasta de recursos : " .. reaper.GetResourcePath())
 say("SWS instalado     : " .. fmtBool(reaper.APIExists("CF_GetSWSVersion")))
 say()
 
--- scripts do kit
-local resPath = reaper.GetResourcePath()
-for _, f in ipairs({ "playthrough_sync_video.lua",
-                     "playthrough_export_mux.lua",
-                     "playthrough_diagnostico.lua" }) do
-  local p = resPath .. "\\Scripts\\" .. f
-  say(string.format("%-34s %s", f, reaper.file_exists(p) and "OK" or "NAO ENCONTRADO"))
+-- Os outros scripts do kit ficam na mesma pasta que este aqui, seja ela qual
+-- for: quem instala pelo INSTALAR.bat cai em Scripts\, quem instala pelo
+-- ReaPack cai numa subpasta propria dele. Perguntar onde EU estou funciona nos
+-- dois casos. Procurar num caminho fixo dava falso "NAO ENCONTRADO" pra quem
+-- tinha instalado certinho pelo ReaPack.
+local _, thisPath = reaper.get_action_context()
+local myDir = thisPath and splitPath(thisPath) or nil
+say("Instalado em      : " .. (myDir or "nao consegui determinar"))
+if myDir then
+  for _, f in ipairs({ "playthrough_sync_video.lua",
+                       "playthrough_export_mux.lua",
+                       "playthrough_diagnostico.lua" }) do
+    say(string.format("  %-32s %s", f,
+        reaper.file_exists(myDir .. "\\" .. f) and "OK" or "NAO ENCONTRADO"))
+  end
 end
 say()
 
@@ -203,8 +212,15 @@ end
 
 say()
 say("========================================")
-say(" Copie tudo acima e mande junto com a")
-say(" sua duvida, com o arquivo CONTEXTO-IA.md")
+say(" Copie tudo acima e mande junto com a sua duvida.")
+say()
+say(" Documentacao e arquivos de teste (quem instalou pelo")
+say(" ReaPack nao recebe esses arquivos junto):")
+say("   https://github.com/viniciusalvinoferreira-boop/playthrough-kit")
+say()
+say("   CONTEXTO-IA.md .... cole numa IA junto com este relatorio")
+say("   LEIA-ME.md ........ tabela dos codigos [PT-xx]")
+say("   Teste/ ............ dois arquivos pra validar a instalacao")
 say("========================================")
 say()
 

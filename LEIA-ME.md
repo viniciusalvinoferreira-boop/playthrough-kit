@@ -1,4 +1,4 @@
-# Playthrough Kit v1.1
+# Playthrough Kit v1.2
 
 Gravar vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
 qualidade na exportação.
@@ -88,11 +88,14 @@ Na pasta `Teste/` tem dois arquivos com um deslocamento **conhecido** de
 3. Selecione os dois
 4. Rode o `playthrough_sync_video`
 
-O console tem que mostrar exatamente:
+O console tem que mostrar:
 
 ```
 video deslocado      : +3000.0 ms
 ```
+
+Uma variação de 1 ou 2 ms pra mais ou pra menos é normal. O que não pode é dar
+um número longe disso.
 
 **Deu 3000:** instalação redonda. Se der problema depois, é na gravação, e
 quase sempre é o golpe nas cordas.

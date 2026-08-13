@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: export sem re-encode
--- @version 1.1
+-- @version 1.2
 -- @author Vinicius Alvino
 -- @about
 --   Renderiza o mix na extensao do item de video e junta os dois com ffmpeg em
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_export_mux.lua
-  Playthrough Kit v1.1
+  Playthrough Kit v1.2
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.

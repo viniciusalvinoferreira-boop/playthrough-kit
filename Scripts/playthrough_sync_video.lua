@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: sync de video com audio
--- @version 1.1
+-- @version 1.2
 -- @author Vinicius Alvino
 -- @about
 --   Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_sync_video.lua
-  Playthrough Kit v1.1
+  Playthrough Kit v1.2
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -36,6 +36,19 @@ local SEARCH_WINDOW = 20.0    -- procura o marcador nos primeiros N segundos
 local ATTACK_RATIO  = 0.5     -- fracao do pico que conta como inicio do ataque
 local READ_SR       = 48000   -- taxa de leitura da analise
 local BLOCK         = 48000   -- samples por leitura (1 segundo)
+
+-- Compensacao do priming do AAC, em milissegundos.
+--
+-- Encoders AAC inserem um bloco de silencio no inicio do stream (1024 samples,
+-- que a 48 kHz dao 21,33 ms). Players que leem o metadado descartam esse bloco;
+-- o REAPER nao descarta ao entregar o audio pelo audio accessor. Resultado: o
+-- audio do video chega aqui ~21 ms atrasado em relacao a imagem, e o alinhamento
+-- herdaria esse erro.
+--
+-- Praticamente todo video de camera e celular usa AAC, entao a compensacao vem
+-- ligada. Se o audio do seu video for PCM (alguns .mov), ponha 0 aqui.
+-- Se o audio do video for AAC a 44,1 kHz, o valor certo e 23.2.
+local VIDEO_AUDIO_OFFSET_MS = 21.3
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }
@@ -211,8 +224,12 @@ end
 local posVid = reaper.GetMediaItemInfo_Value(vid, "D_POSITION")
 local posRef = reaper.GetMediaItemInfo_Value(ref, "D_POSITION")
 
-local absVid = posVid + tVid   -- onde o chunk cai, no video
-local absRef = posRef + tRef   -- onde o chunk cai, na guitarra
+-- o transiente medido no audio do video vem atrasado pelo priming do AAC, entao
+-- a posicao real do chunk e um pouco antes do que a analise encontrou
+local tVidCorr = tVid - VIDEO_AUDIO_OFFSET_MS / 1000
+
+local absVid = posVid + tVidCorr  -- onde o chunk cai, no video
+local absRef = posRef + tRef      -- onde o chunk cai, na guitarra
 local delta  = absRef - absVid
 
 reaper.Undo_BeginBlock()
@@ -221,10 +238,11 @@ reaper.UpdateArrange()
 reaper.Undo_EndBlock("Playthrough: sync video com audio", -1)
 
 reaper.ShowConsoleMsg(string.format(
-  "sync ok\n  marcador no video    : %.4f s\n" ..
+  "sync ok\n" ..
+  "  marcador no video    : %.4f s  (medido %.4f, priming AAC -%.1f ms)\n" ..
   "  marcador na guitarra : %.4f s\n" ..
   "  video deslocado      : %+.1f ms\n\n",
-  tVid, tRef, delta * 1000))
+  tVidCorr, tVid, VIDEO_AUDIO_OFFSET_MS, tRef, delta * 1000))
 
 -- Se o marcador caiu perto do fim da janela de busca, e provavel que o script
 -- tenha pego a primeira nota da musica no lugar do chunk.
