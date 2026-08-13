@@ -34,27 +34,35 @@ referência.
 `GUITARRA (entrada 1-2)` vira `INSTRUMENTO (entrada 1-2)`. Tirar "cordas" e
 "captador" das notas do template.
 
-### Track de CLICK
+### Track de CLICK, e a regra das tracks de apoio
 
-**Cuidado de design, não é só adicionar a track.** O export renderiza o master
-mix inteiro, então uma track de click audível entra no vídeo final. E se ela
-vier mutada, a pessoa não escuta enquanto grava, que é justamente pra isso que
-ela existe.
+Adicionar a track é a parte fácil. O problema é que o export renderiza o master
+mix inteiro, então click audível entra no vídeo publicado. E a track não pode
+vir mutada de fábrica, porque é justamente durante a gravação que ela precisa
+soar.
 
-Três caminhos, decidir na hora de implementar:
+**Decisão: o script cobra a regra, não o usuário.**
 
-1. **Metrônomo nativo do REAPER.** Ele tem chave própria pra entrar ou não no
-   render, então dá pra ouvir gravando sem vazar no arquivo. Mais limpo, mas
-   não é uma track e não aparece no arranjo
-2. **Track de click com aviso.** A pessoa põe o arquivo dela e muta antes de
-   exportar. Simples, mas depende de lembrar, e esquecer significa click no
-   vídeo publicado
-3. **Track de click com verificação no export.** O script detecta uma track
-   chamada CLICK audível e avisa antes de renderizar. Mais trabalho, mas não
-   dá pra errar
+Documentação depende de lembrar, e quem esquece só descobre depois de postar.
+Então o export passa a verificar sozinho.
 
-O caminho 3 é o único que não depende da memória do usuário. Vale considerar
-enquanto o export já vai ser mexido.
+O que ele faz, antes de renderizar:
+
+1. Procura tracks de apoio que estejam audíveis. Reconhece pelo nome:
+   `VIDEO`, `CLICK`, `REFERENCIA` e `REF`
+2. Se achar alguma, mostra quais são e pergunta se pode silenciar
+3. Muta, renderiza, e **devolve o estado original** ao terminar
+
+Devolver o estado importa: a pessoa aperta play depois do export e o click
+continua lá, do jeito que ela deixou. O script não bagunça o projeto pra
+resolver um problema dele.
+
+Isso generaliza pra além do click. A regra real do kit é **track de apoio não
+entra no mix**, e ela já vale hoje pra track de vídeo, que alguém pode desmutar
+pra conferir o alinhamento e esquecer de mutar de novo.
+
+Implementar junto com a leva do MIDI, já que o export vai ser mexido e a track
+de referência do template MIDI cai exatamente na mesma regra.
 
 ### Template multitrack
 
