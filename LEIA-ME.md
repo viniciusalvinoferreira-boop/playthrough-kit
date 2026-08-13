@@ -1,4 +1,4 @@
-# Playthrough Kit v1.4
+# Playthrough Kit v1.5
 
 Gravar vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
 qualidade na exportação.

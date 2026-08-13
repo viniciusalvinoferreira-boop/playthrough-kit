@@ -1,5 +1,25 @@
 # Mudanças
 
+## v1.5
+
+**O último frame do vídeo se perdia no export**
+
+Num take real de 33 segundos, o arquivo final saiu com 794 frames contra 795 do
+original.
+
+A causa: o render do REAPER entrega o WAV alguns microssegundos mais curto que
+a extensão pedida, por arredondamento de samples. O `-shortest` do ffmpeg corta
+pelo stream mais curto, então bastaram **12 microssegundos** de diferença pra
+ele descartar o último frame.
+
+Agora o render vai 100 ms além do fim do vídeo. Com essa sobra, o vídeo é
+sempre o stream mais curto, o corte cai no áudio que sobra, e nenhum frame se
+perde.
+
+Vale registrar que a imagem nunca foi recodificada: os 794 frames presentes
+eram bit a bit idênticos aos 794 primeiros do original. O problema era de
+duração, não de qualidade.
+
 ## v1.4
 
 Duas falhas encontradas no primeiro take real, com música tocando junto.

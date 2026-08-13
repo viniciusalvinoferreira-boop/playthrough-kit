@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: diagnostico
--- @version 1.3
+-- @version 1.5
 -- @author Vinicius Alvino
 -- @about
 --   Relatorio de ambiente pra quando algo nao funciona. Nao altera nada no
@@ -7,7 +7,7 @@
 
 --[[
   playthrough_diagnostico.lua
-  Playthrough Kit v1.3
+  Playthrough Kit v1.5
 
   Nao muda nada no seu projeto. Só olha o ambiente e escreve um relatorio no
   console do REAPER.

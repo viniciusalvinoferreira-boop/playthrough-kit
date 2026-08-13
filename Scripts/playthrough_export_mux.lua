@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: export sem re-encode
--- @version 1.3
+-- @version 1.5
 -- @author Vinicius Alvino
 -- @about
 --   Renderiza o mix na extensao do item de video e junta os dois com ffmpeg em
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_export_mux.lua
-  Playthrough Kit v1.3
+  Playthrough Kit v1.5
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -156,10 +156,20 @@ local dir, base = splitPath(srcFile)
 local wavPath   = dir .. "\\" .. base .. "_mix.wav"
 local outPath   = dir .. "\\" .. base .. SUFFIX .. ".mp4"
 
--- time selection exatamente sobre o video ----------------------------------
+-- time selection sobre o video, com uma sobra no fim ------------------------
+--
+-- A sobra e de proposito. O render sai com alguns microssegundos a MENOS que a
+-- extensao pedida, por arredondamento de samples, e o -shortest do ffmpeg corta
+-- pelo stream mais curto. Num take real, 12 microssegundos de diferenca bastaram
+-- pra ele descartar o ultimo frame do video.
+--
+-- Com a sobra, o video passa a ser sempre o stream mais curto: o corte cai no
+-- audio que sobra, e nenhum frame se perde.
+local TAIL = 0.1
+
 local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
 local len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-reaper.GetSet_LoopTimeRange(true, false, pos, pos + len, false)
+reaper.GetSet_LoopTimeRange(true, false, pos, pos + len + TAIL, false)
 
 -- render do master mix dentro da time selection ----------------------------
 reaper.GetSetProjectInfo(0, "RENDER_SETTINGS", 0, true)     -- master mix

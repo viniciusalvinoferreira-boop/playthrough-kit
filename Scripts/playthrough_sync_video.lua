@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: sync de video com audio
--- @version 1.4
+-- @version 1.5
 -- @author Vinicius Alvino
 -- @about
 --   Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_sync_video.lua
-  Playthrough Kit v1.4
+  Playthrough Kit v1.5
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -66,7 +66,7 @@ local ENV_BLOCK        = 960   -- 20 ms a 48k, resolucao do envelope
 -- Praticamente todo video de camera e celular usa AAC, entao a compensacao vem
 -- ligada. Se o audio do seu video for PCM (alguns .mov), ponha 0 aqui.
 -- Se o audio do video for AAC a 44,1 kHz, o valor certo e 23.2.
-local VIDEO_AUDIO_OFFSET_MS = 21.4
+local VIDEO_AUDIO_OFFSET_MS = 21.5
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }
