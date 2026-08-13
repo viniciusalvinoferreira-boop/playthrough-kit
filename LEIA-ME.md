@@ -1,4 +1,4 @@
-# Playthrough Kit v1.3
+# Playthrough Kit v1.4
 
 Gravar vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
 qualidade na exportação.
@@ -127,6 +127,15 @@ Então o ritual de cada take é:
 3. **Chunk**, forte
 4. Espera 1 ou 2 segundos
 5. Toca
+
+A ordem dos dois primeiros não importa. Se você apertar REC no REAPER depois
+da câmera, o vídeo precisaria começar antes do zero da timeline, e o script
+resolve isso empurrando os outros itens pra frente. Alinha igual nos dois
+casos.
+
+Dê o chunk **logo no início**, nos primeiros segundos. O script procura o
+marcador nos primeiros 12 segundos, e quanto mais silêncio houver antes da
+música entrar, mais fácil pra ele distinguir o golpe do resto.
 
 ---
 

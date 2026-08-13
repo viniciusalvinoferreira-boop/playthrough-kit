@@ -1,0 +1,21 @@
+# Cache de waveform do REAPER, gerado sozinho ao abrir qualquer arquivo
+*.reapeaks
+**/peaks/
+
+# Renders e subprodutos do proprio kit
+*_mix.wav
+*_final.mp4
+_mux_tmp.bat
+
+# Backups e arquivos temporarios do REAPER
+*.rpp-bak
+*.RPP-bak
+*.rpp-UNDO
+reaper-*.ini
+
+# A pasta Teste/ so deve carregar os dois arquivos oficiais de validacao.
+# Qualquer gravacao que voce jogar ali pra experimentar fica local: material
+# pessoal nao vai pro repositorio publico sem querer.
+Teste/*
+!Teste/TESTE_video.mp4
+!Teste/TESTE_guitarra.wav

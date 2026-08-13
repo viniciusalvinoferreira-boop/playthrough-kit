@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: sync de video com audio
--- @version 1.3
+-- @version 1.4
 -- @author Vinicius Alvino
 -- @about
 --   Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_sync_video.lua
-  Playthrough Kit v1.3
+  Playthrough Kit v1.4
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -32,10 +32,28 @@
 ]]
 
 -- ajustes ------------------------------------------------------------------
-local SEARCH_WINDOW = 20.0    -- procura o marcador nos primeiros N segundos
-local ATTACK_RATIO  = 0.5     -- fracao do pico que conta como inicio do ataque
+-- Janela de busca. Curta de proposito: o piso de ruido e estimado a partir da
+-- propria janela, entao quanto mais musica couber dentro dela, mais alto o piso
+-- fica e mais dificil e enxergar o marcador. 12 segundos e folga de sobra pra
+-- quem da o golpe no comeco, e mantem a maior parte da janela em silencio.
+local SEARCH_WINDOW = 12.0
 local READ_SR       = 48000   -- taxa de leitura da analise
 local BLOCK         = 48000   -- samples por leitura (1 segundo)
+
+-- Como o marcador e reconhecido.
+--
+-- A versao antiga procurava o pico da janela e pegava o primeiro ponto acima de
+-- 50% dele. Isso quebra no audio do microfone da camera: ali a musica e muito
+-- mais alta que o golpe inicial, entao o golpe nao chegava nem perto de 50% do
+-- pico e o script marcava um ponto qualquer no meio da musica.
+--
+-- Agora a referencia e o SILENCIO, nao o pico. O marcador e o primeiro evento
+-- que se levanta muito acima do ruido de fundo da sala, e isso vale mesmo que a
+-- musica depois fique dez vezes mais alta que ele.
+local NOISE_FACTOR     = 10.0  -- quantas vezes acima do silencio de fundo conta
+local MIN_PEAK_RATIO   = 0.05  -- piso de seguranca, fracao do pico da janela
+local NOISE_PERCENTILE = 0.2   -- fracao da janela que se assume ser silencio
+local ENV_BLOCK        = 960   -- 20 ms a 48k, resolucao do envelope
 
 -- Compensacao do priming do AAC, em milissegundos.
 --
@@ -48,7 +66,7 @@ local BLOCK         = 48000   -- samples por leitura (1 segundo)
 -- Praticamente todo video de camera e celular usa AAC, entao a compensacao vem
 -- ligada. Se o audio do seu video for PCM (alguns .mov), ponha 0 aqui.
 -- Se o audio do video for AAC a 44,1 kHz, o valor certo e 23.2.
-local VIDEO_AUDIO_OFFSET_MS = 21.3
+local VIDEO_AUDIO_OFFSET_MS = 21.4
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }
@@ -110,16 +128,27 @@ local function findTransient(item)
   local nch = 1
   local buf = reaper.new_array(BLOCK)
 
-  -- passada 1: encontra o pico absoluto dentro da janela
-  local peak, pos = 0.0, 0.0
+  -- passada 1: monta um envelope grosseiro (pico a cada 20 ms) pra descobrir
+  -- tanto o pico da janela quanto o nivel do silencio de fundo
+  local env  = {}
+  local peak = 0.0
+  local pos  = 0.0
   while pos < dur do
     local n = math.min(BLOCK, math.floor((dur - pos) * READ_SR))
     if n <= 0 then break end
     buf.clear()
     reaper.GetAudioAccessorSamples(acc, READ_SR, nch, t0 + pos, n, buf)
-    for i = 1, n do
-      local v = math.abs(buf[i] or 0)
-      if v > peak then peak = v end
+    local i = 1
+    while i <= n do
+      local stop = math.min(i + ENV_BLOCK - 1, n)
+      local m = 0.0
+      for k = i, stop do
+        local v = math.abs(buf[k] or 0)
+        if v > m then m = v end
+      end
+      env[#env + 1] = m
+      if m > peak then peak = m end
+      i = stop + 1
     end
     pos = pos + n / READ_SR
   end
@@ -129,8 +158,17 @@ local function findTransient(item)
     return nil, "audio silencioso ou nao decodificado"
   end
 
-  -- passada 2: primeiro ponto que cruza a fracao do pico (o ataque, nao o topo)
-  local threshold = peak * ATTACK_RATIO
+  -- O piso de ruido vem do percentil 20 do envelope, nao do minimo: um unico
+  -- bloco de silencio digital puxaria o minimo pra zero e derrubaria o limiar.
+  table.sort(env)
+  local noiseFloor = env[math.max(1, math.floor(#env * NOISE_PERCENTILE))] or 0
+
+  -- limiar = bem acima do silencio, com piso de seguranca pra nao disparar em
+  -- ruidinho de sala, e teto pra garantir que sempre exista algo que cruze
+  local threshold = math.max(noiseFloor * NOISE_FACTOR, peak * MIN_PEAK_RATIO)
+  threshold = math.min(threshold, peak * 0.9)
+
+  -- passada 2: primeiro ponto que cruza o limiar (o ataque, nao o topo)
   local hit = nil
   pos = 0.0
   while pos < dur and not hit do
@@ -239,17 +277,48 @@ local absVid = posVid + tVidCorr  -- onde o chunk cai, no video
 local absRef = posRef + tRef      -- onde o chunk cai, na guitarra
 local delta  = absRef - absVid
 
+local novaPos  = posVid + delta
+local empurrou = 0
+
 reaper.Undo_BeginBlock()
-reaper.SetMediaItemInfo_Value(vid, "D_POSITION", posVid + delta)
+if novaPos < 0 then
+  -- O video precisaria comecar antes do zero da timeline. Isso acontece sempre
+  -- que voce aperta REC na camera antes de apertar REC no REAPER, que e a ordem
+  -- natural. O REAPER nao aceita item em posicao negativa: ele trava em 0 e o
+  -- alinhamento sai errado sem avisar ninguem.
+  --
+  -- Entao, em vez de puxar o video pra tras, empurramos todo o resto pra frente
+  -- na mesma medida. O alinhamento entre as tracks de audio e preservado,
+  -- porque todas andam juntas.
+  empurrou = -novaPos
+  local total = reaper.CountMediaItems(0)
+  for i = 0, total - 1 do
+    local it = reaper.GetMediaItem(0, i)
+    if it ~= vid then
+      local p = reaper.GetMediaItemInfo_Value(it, "D_POSITION")
+      reaper.SetMediaItemInfo_Value(it, "D_POSITION", p + empurrou)
+    end
+  end
+  novaPos = 0
+end
+reaper.SetMediaItemInfo_Value(vid, "D_POSITION", novaPos)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock("Playthrough: sync video com audio", -1)
 
 reaper.ShowConsoleMsg(string.format(
   "sync ok\n" ..
   "  marcador no video    : %.4f s  (medido %.4f, priming AAC -%.1f ms)\n" ..
-  "  marcador na guitarra : %.4f s\n" ..
-  "  video deslocado      : %+.1f ms\n\n",
+  "  marcador na referencia: %.4f s\n" ..
+  "  video deslocado      : %+.1f ms\n",
   tVidCorr, tVid, VIDEO_AUDIO_OFFSET_MS, tRef, delta * 1000))
+
+if empurrou > 0 then
+  reaper.ShowConsoleMsg(string.format(
+    "  o video comecaria antes do zero, entao ele foi pra 0 e todo o resto\n" ..
+    "  andou %+.1f ms pra frente, mantendo o alinhamento entre as tracks\n",
+    empurrou * 1000))
+end
+reaper.ShowConsoleMsg("\n")
 
 -- Se o marcador caiu perto do fim da janela de busca, e provavel que o script
 -- tenha pego a primeira nota da musica no lugar do chunk.

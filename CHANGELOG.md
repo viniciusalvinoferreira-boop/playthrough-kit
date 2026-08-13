@@ -1,5 +1,35 @@
 # Mudanças
 
+## v1.4
+
+Duas falhas encontradas no primeiro take real, com música tocando junto.
+
+**O marcador era procurado do jeito errado**
+
+O script achava o pico da janela e pegava o primeiro ponto acima de 50% dele.
+Isso funciona no áudio do captador, onde o golpe inicial é o evento mais alto,
+e falha no áudio do microfone da câmera, onde a música é muito mais alta que o
+golpe. O golpe não chegava perto dos 50%, e o script marcava um ponto qualquer
+no meio da música.
+
+Agora a referência é o **silêncio**, não o pico: o marcador é o primeiro evento
+que se levanta muito acima do ruído de fundo da sala. Isso vale mesmo quando a
+música depois fica dez vezes mais alta que ele.
+
+O piso de ruído sai do percentil 20 do envelope, e não do mínimo, porque um
+único bloco de silêncio digital puxaria o mínimo pra zero e derrubaria o limiar.
+
+**Vídeo que precisava começar antes do zero**
+
+Quem aperta REC na câmera antes de apertar no REAPER (ou seja, todo mundo)
+acaba com um vídeo que precisaria ser posicionado em tempo negativo pra
+alinhar. O REAPER não aceita isso: ele trava o item em 0 e o alinhamento sai
+errado em silêncio.
+
+Agora, quando isso acontece, o vídeo vai pra 0 e todos os outros itens andam
+pra frente na mesma medida. O alinhamento entre as tracks de áudio é
+preservado, porque todas se movem juntas.
+
 ## v1.3
 
 **PT-06 disparava alarme falso**
