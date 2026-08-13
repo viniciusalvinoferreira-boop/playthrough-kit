@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<index version="1" name="Playthrough Kit (dev)">
+  <category name="Playthrough Kit">
+
+    <reapack name="playthrough_sync_video.lua" type="script"
+             desc="Playthrough Kit: sync de video com audio">
+      <version name="1.3" author="Vinicius Alvino" time="2026-08-13T15:00:00Z">
+        <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/Scripts/playthrough_sync_video.lua</source>
+      </version>
+      <metadata>
+        <description><![CDATA[Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo transiente nos dois arquivos.
+
+O marcador precisa existir nos DOIS sinais: use um golpe seco nas cordas abafadas, nao palma. Palma entra no mic da camera mas nao passa pelo captador da guitarra.
+
+Selecione o item de video e o da guitarra, e rode.]]></description>
+      </metadata>
+    </reapack>
+
+    <reapack name="playthrough_export_mux.lua" type="script"
+             desc="Playthrough Kit: export sem re-encode">
+      <version name="1.3" author="Vinicius Alvino" time="2026-08-13T15:00:00Z">
+        <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/Scripts/playthrough_export_mux.lua</source>
+      </version>
+      <metadata>
+        <description><![CDATA[Renderiza o mix na extensao do item de video e junta os dois com ffmpeg em modo copy.
+
+O video final e bit a bit identico ao que saiu da camera, so com a faixa de audio trocada. Nenhum editor faz melhor, porque nao existe melhor que nao tocar no arquivo.
+
+Requer ffmpeg: winget install Gyan.FFmpeg
+
+Selecione apenas o item de video, e rode.]]></description>
+      </metadata>
+    </reapack>
+
+    <reapack name="playthrough_diagnostico.lua" type="script"
+             desc="Playthrough Kit: diagnostico">
+      <version name="1.3" author="Vinicius Alvino" time="2026-08-13T15:00:00Z">
+        <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/Scripts/playthrough_diagnostico.lua</source>
+      </version>
+      <metadata>
+        <description><![CDATA[Relatorio de ambiente pra quando algo nao funciona. Nao altera nada no projeto.
+
+Checa versao do REAPER, onde esta o ffmpeg, sample rate do projeto, e analisa os itens selecionados.
+
+Copie o relatorio inteiro e mande junto com a sua duvida.]]></description>
+      </metadata>
+    </reapack>
+
+    <reapack name="Playthrough.RPP" type="projecttpl"
+             desc="Playthrough Kit: template de projeto">
+      <version name="1.3" author="Vinicius Alvino" time="2026-08-13T15:00:00Z">
+        <source>https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/ProjectTemplates/Playthrough.RPP</source>
+      </version>
+      <metadata>
+        <description><![CDATA[Template com tres tracks: VIDEO (mutada de proposito), GUITARRA (armada na entrada 1/2 estereo) e BACKING TRACK.
+
+Projeto em 48 kHz e render cravado em WAV 24 bits, que e o que os scripts esperam.]]></description>
+      </metadata>
+    </reapack>
+
+  </category>
+
+  <metadata>
+    <description><![CDATA[Playthrough Kit (dev)
+
+Gravar video tocando guitarra sem sincronizar audio na mao, e sem perder qualidade na exportacao.
+
+O sync acha o mesmo transiente nos dois arquivos e alinha sozinho. O export junta video e audio sem re-encodar o video, entao o arquivo final tem exatamente a qualidade que saiu da camera.
+
+Requer ffmpeg (winget install Gyan.FFmpeg) e REAPER 7 no Windows.]]></description>
+    <link rel="website">https://github.com/viniciusalvinoferreira-boop/playthrough-kit</link>
+  </metadata>
+</index>
