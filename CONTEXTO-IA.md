@@ -219,11 +219,26 @@ O script detecta as duas primeiras e pergunta antes de continuar. A orientação
 Vídeo é sempre 48 kHz. Projeto em 44,1 kHz gera resample e, em takes longos,
 deriva audível entre imagem e som.
 
-Os dois scripts checam `PROJECT_SRATE` e `PROJECT_SRATE_USE`. O sync avisa no
-console, o export bloqueia e pede confirmação.
+### Como saber a taxa real, e o erro que já cometemos aqui
 
-Conserto no REAPER: `Options > Preferences > Audio > Device`, marcar
-**Request sample rate** e pôr 48000. O template já traz o projeto em 48000.
+`PROJECT_SRATE` **não** é a taxa em que o áudio está rodando. Ela só vale
+quando `PROJECT_SRATE_USE` está ligado; com a flag desligada, o número fica
+guardado no projeto sem efeito nenhum e quem manda é a interface.
+
+Até a v1.2 os scripts liam só `PROJECT_SRATE` e disparavam PT-06 em quem tinha
+a interface corretamente em 48 kHz. A leitura certa é:
+
+```lua
+local _, devSr = reaper.GetAudioDeviceInfo("SRATE", "")
+local efetivo = (projUse ~= 0) and projSr or tonumber(devSr)
+```
+
+Se o usuário reclamar de PT-06 jurando que configurou 48 kHz, peça a versão do
+kit. Abaixo de 1.3, o alarme pode ser falso.
+
+Conserto no REAPER: `Options > Preferences > Audio > Device`, **marcar a caixa**
+`Request sample rate` com 48000, e reiniciar. A caixa é o que importa: digitar o
+número com a caixa desmarcada não muda nada.
 
 Nota sobre deriva de clock: a câmera e a interface de áudio têm clocks
 independentes. Em takes de 3 a 5 minutos o desvio é irrelevante. Em takes de 20
@@ -244,7 +259,7 @@ vá direto na linha correspondente.
 | **PT-03** | sem chunk, ou fraco demais | regravar com o golpe nas cordas bem forte |
 | **PT-04** | REAPER não decodifica o áudio do arquivo | instalar LAV Filters, ou gravar em H.264 no lugar de HEVC |
 | **PT-05** | item cortado ou com playrate diferente de 1.0 | sincronizar antes, cortar depois |
-| **PT-06** | projeto fora de 48 kHz | `Project Settings > Sample rate` = 48000, marcado |
+| **PT-06** | áudio rodando fora de 48 kHz | `Preferences > Audio > Device`, **marcar** `Request sample rate` com 48000 e reiniciar o REAPER |
 | **PT-07** | ffmpeg ausente, ou instalado com o REAPER já aberto | `winget install Gyan.FFmpeg`, depois reabrir o REAPER |
 | **PT-08** | render em segundo plano ainda rodando | esperar e rodar de novo |
 | **PT-09** | ffmpeg falhou no mux | erro completo no console: `View > Show console output` |

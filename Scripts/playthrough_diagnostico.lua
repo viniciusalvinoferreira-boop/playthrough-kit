@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: diagnostico
--- @version 1.2
+-- @version 1.3
 -- @author Vinicius Alvino
 -- @about
 --   Relatorio de ambiente pra quando algo nao funciona. Nao altera nada no
@@ -7,7 +7,7 @@
 
 --[[
   playthrough_diagnostico.lua
-  Playthrough Kit v1.2
+  Playthrough Kit v1.3
 
   Nao muda nada no seu projeto. Só olha o ambiente e escreve um relatorio no
   console do REAPER.
@@ -162,13 +162,31 @@ else
 end
 say()
 
--- sample rate
-local sr    = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
-local srUse = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
-say(string.format("Sample rate       : %d Hz (cravado: %s)", sr, fmtBool(srUse ~= 0)))
-if srUse == 0 or math.abs(sr - 48000) > 1 then
-  say("  ATENCAO         : deveria ser 48000 cravado   [PT-06]")
-  say("  conserto        : Project Settings > Sample rate = 48000, marcado")
+-- Sample rate. O que importa e a taxa em que o audio esta REALMENTE rodando,
+-- que e a do device. PROJECT_SRATE so vale quando PROJECT_SRATE_USE esta
+-- ligado; com a flag desligada aquele numero fica no projeto sem efeito nenhum,
+-- e reportar ele como se fosse a taxa real era enganoso.
+local _, devSr = reaper.GetAudioDeviceInfo("SRATE", "")
+local devRate  = tonumber(devSr) or 0
+local projSr   = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
+local projUse  = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
+
+if devRate > 0 then
+  say(string.format("Sample rate real  : %d Hz  (interface de audio)", devRate))
+else
+  say("Sample rate real  : nao consegui ler (interface fechada?)")
+end
+if projUse ~= 0 then
+  say(string.format("  projeto crava   : %d Hz", projSr))
+else
+  say(string.format("  projeto crava   : nao (guarda %d Hz sem efeito)", projSr))
+end
+
+local efetivo = (projUse ~= 0) and projSr or devRate
+if efetivo > 0 and math.abs(efetivo - 48000) > 1 then
+  say("  ATENCAO         : o audio esta rodando fora de 48000 Hz   [PT-06]")
+  say("  conserto        : Preferences > Audio > Device, marque")
+  say("                    Request sample rate com 48000, e reinicie o REAPER")
 end
 say()
 

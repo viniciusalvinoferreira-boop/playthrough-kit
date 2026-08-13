@@ -1,5 +1,25 @@
 # Mudanças
 
+## v1.3
+
+**PT-06 disparava alarme falso**
+
+Os scripts liam `PROJECT_SRATE` e tratavam o valor como se fosse a taxa em que
+o áudio estava rodando. Não é.
+
+`PROJECT_SRATE` só tem efeito quando `PROJECT_SRATE_USE` está ligado. Com a
+flag desligada, aquele número fica guardado no projeto sem valer nada, e quem
+manda é a interface de áudio. Resultado: quem tinha a interface corretamente em
+48 kHz e um projeto qualquer aberto levava um PT-06 sem ter problema nenhum.
+
+Agora os três scripts leem a taxa real pelo `GetAudioDeviceInfo("SRATE")` e só
+usam a do projeto quando ela está de fato cravada. O relatório mostra as duas
+separadas, deixando claro qual está valendo.
+
+A mensagem de conserto também estava errada, mandando pro `Project Settings`
+quando o lugar certo é `Preferences > Audio > Device`, marcando a caixa
+`Request sample rate`. A caixa é o que importa, não o número ao lado dela.
+
 ## v1.2
 
 Correções encontradas no primeiro teste real de instalação via ReaPack.

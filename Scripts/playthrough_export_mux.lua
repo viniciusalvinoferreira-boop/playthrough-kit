@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: export sem re-encode
--- @version 1.2
+-- @version 1.3
 -- @author Vinicius Alvino
 -- @about
 --   Renderiza o mix na extensao do item de video e junta os dois com ffmpeg em
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_export_mux.lua
-  Playthrough Kit v1.2
+  Playthrough Kit v1.3
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -136,14 +136,18 @@ end
 -- Video e sempre 48 kHz. Renderizar o audio em outra taxa gera resample e, em
 -- takes longos, deriva audivel. Melhor barrar aqui do que entregar um arquivo
 -- que dessincroniza no fim.
-local sr = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
-local srUse = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
-if srUse == 0 or math.abs(sr - 48000) > 1 then
-  if reaper.MB("[PT-06]\n\nO projeto nao esta cravado em 48000 Hz.\n\n" ..
-               "Video e sempre 48 kHz. Em outra taxa o audio vai ser " ..
-               "resampleado e takes longos podem derivar.\n\n" ..
-               "Conserto: Project Settings > Sample rate = 48000, marcado.\n\n" ..
-               "Continuar assim mesmo?", "Playthrough: export", 1) ~= 1 then
+local _, devSr = reaper.GetAudioDeviceInfo("SRATE", "")
+local projSr   = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
+local projUse  = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
+local efetivo  = (projUse ~= 0) and projSr or (tonumber(devSr) or 0)
+
+if efetivo > 0 and math.abs(efetivo - 48000) > 1 then
+  if reaper.MB(string.format(
+       "[PT-06]\n\nO audio esta rodando a %d Hz.\n\n" ..
+       "Video e sempre 48 kHz. Em outra taxa o audio e resampleado e takes " ..
+       "longos podem derivar.\n\nConserto: Preferences > Audio > Device, " ..
+       "marque Request sample rate com 48000 e reinicie o REAPER.\n\n" ..
+       "Continuar assim mesmo?", efetivo), "Playthrough: export", 1) ~= 1 then
     return
   end
 end

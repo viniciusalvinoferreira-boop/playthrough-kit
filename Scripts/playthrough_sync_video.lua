@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: sync de video com audio
--- @version 1.2
+-- @version 1.3
 -- @author Vinicius Alvino
 -- @about
 --   Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_sync_video.lua
-  Playthrough Kit v1.2
+  Playthrough Kit v1.3
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -185,13 +185,20 @@ if #warn > 0 then
   if reaper.MB(msg, "Playthrough: sync", 1) ~= 1 then return end
 end
 
-local sr = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
-local srUse = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
-if srUse == 0 or math.abs(sr - 48000) > 1 then
-  reaper.ShowConsoleMsg(
-    "[PT-06] o projeto nao esta cravado em 48000 Hz. Video e sempre 48 kHz; " ..
-    "em outra taxa o REAPER resampla e takes longos podem derivar.\n" ..
-    "Conserto: Project Settings > Sample rate = 48000, marcado.\n\n")
+-- vale a taxa em que o audio realmente roda: a do device, a menos que o projeto
+-- crave outra. Olhar so PROJECT_SRATE dava alarme falso pra quem tinha o device
+-- certo e o projeto sem a flag ligada.
+local _, devSr = reaper.GetAudioDeviceInfo("SRATE", "")
+local projSr   = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
+local projUse  = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
+local efetivo  = (projUse ~= 0) and projSr or (tonumber(devSr) or 0)
+
+if efetivo > 0 and math.abs(efetivo - 48000) > 1 then
+  reaper.ShowConsoleMsg(string.format(
+    "[PT-06] o audio esta rodando a %d Hz. Video e sempre 48 kHz; em outra " ..
+    "taxa o REAPER resampla e takes longos podem derivar.\nConserto: " ..
+    "Preferences > Audio > Device, marque Request sample rate com 48000.\n\n",
+    efetivo))
 end
 
 local tVid, errV = findTransient(vid)

@@ -1,4 +1,4 @@
-# Playthrough Kit v1.2
+# Playthrough Kit v1.3
 
 Gravar vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
 qualidade na exportação.
@@ -161,11 +161,15 @@ economize metade do arquivo.
 Vídeo é sempre 48 kHz. Se o seu projeto ou a sua interface estiverem em 44,1
 kHz, o REAPER vai resamplar em silêncio e takes longos podem derivar.
 
-- `Options` → `Preferences` → `Audio` → `Device`: marque **Request sample rate**
-  e ponha **48000**
-- O template já vem com o projeto cravado em 48000
+`Options` → `Preferences` → `Audio` → `Device`: **marque a caixa**
+`Request sample rate` e deixe **48000** dentro dela. Depois **reinicie o
+REAPER**, porque trocar de taxa exige reabrir o driver.
 
-Os scripts avisam se detectarem que o projeto não está em 48k.
+A caixa marcada é o que importa, não o número. Digitar 48000 e deixar a caixa
+desmarcada não faz nada: o REAPER continua aceitando a taxa que a interface
+estiver usando, e o número fica ali só enfeitando.
+
+Os scripts avisam se o áudio estiver rodando fora de 48 kHz.
 
 ---
 
@@ -181,7 +185,7 @@ Procure o código aqui:
 | **PT-03** | Não achei o transiente | Não teve chunk, ou foi fraco demais | Regrave com o golpe nas cordas bem forte no início |
 | **PT-04** | Áudio silencioso ou não decodifica | O REAPER não consegue ler o áudio desse arquivo | Instale o LAV Filters, ou grave em H.264 em vez de HEVC |
 | **PT-05** | Item cortado ou com playrate alterado | O cálculo assume item inteiro e velocidade normal | Sincronize primeiro, corte depois |
-| **PT-06** | Projeto fora de 48 kHz | Vídeo é sempre 48 kHz | `Project Settings` → `Sample rate` = 48000, marcado |
+| **PT-06** | Áudio rodando fora de 48 kHz | Vídeo é sempre 48 kHz | `Preferences` → `Audio` → `Device`: **marque** `Request sample rate` com 48000, e reinicie o REAPER |
 | **PT-07** | Não encontrei o ffmpeg | Não instalado, ou instalado com o REAPER já aberto | `winget install Gyan.FFmpeg`, depois feche e reabra o REAPER |
 | **PT-08** | O render não gerou o WAV | Render em segundo plano ligado | Espere terminar e rode de novo |
 | **PT-09** | O ffmpeg falhou no mux | Vários motivos | O erro completo vai pro console: `View` → `Show console output` |
