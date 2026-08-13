@@ -1,0 +1,58 @@
+TÔ COM PROBLEMA, E AGORA?
+==========================
+
+Faça nesta ordem. Cada passo resolve mais casos que o anterior, e
+o passo 3 sozinho já separa "instalei errado" de "gravei errado".
+
+
+1. TEM UM CÓDIGO NA MENSAGEM DE ERRO?
+
+   Toda mensagem do kit vem com um código, tipo [PT-03].
+   Abra o LEIA-ME.md e procure por esse código.
+   A causa e o conserto estão lá, na tabela.
+
+
+2. RODE O DIAGNÓSTICO
+
+   No REAPER:
+     Actions > Show action list > playthrough_diagnostico
+
+   Ele não altera nada no seu projeto. Só olha o ambiente e escreve
+   um relatório no console. Boa parte das vezes o próprio relatório
+   já aponta o problema, com o código do erro junto.
+
+
+3. TESTE SEM PRECISAR GRAVAR NADA
+
+   Na pasta Teste/ tem dois arquivos com deslocamento já conhecido.
+
+     - Arraste os dois pro REAPER
+     - Os dois começando na posição 0
+     - Selecione os dois
+     - Rode o playthrough_sync_video
+
+   Tem que dar exatamente +3000.0 ms no console.
+
+   DEU 3000: a instalação está boa. O problema está na sua gravação,
+   e em quase todos os casos é o golpe nas cordas (veja o LEIA-ME,
+   seção "LEIA ISTO").
+
+   NÃO DEU: o problema é de instalação ou de ambiente. Vá pro passo 4
+   levando o relatório do diagnóstico.
+
+
+4. PEÇA AJUDA PRA UMA IA
+
+   Abra o ChatGPT, o Claude, ou o que você usar, e mande as três coisas:
+
+     a) o conteúdo do arquivo CONTEXTO-IA.md
+     b) o relatório do diagnóstico (passo 2)
+     c) o que você fez e o que aconteceu
+
+   O CONTEXTO-IA.md explica a arquitetura inteira do kit, os valores
+   que parecem arbitrários mas não são, e os modos de falha conhecidos.
+   Com ele em mãos a IA entende o sistema em vez de chutar, e o
+   diagnóstico dá o estado real da sua máquina.
+
+   Essa combinação resolve a esmagadora maioria dos casos sem precisar
+   de mais ninguém.
