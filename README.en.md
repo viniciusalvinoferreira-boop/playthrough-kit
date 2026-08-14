@@ -135,3 +135,7 @@ The kit is free and stays free. If it saved you time, you can buy me a coffee:
 
 No obligation at all. Reporting a bug, or just telling me it worked, helps
 plenty too.
+
+---
+
+Made by **Vinicius Alvino** · [Instagram](https://instagram.com/vinialvino)

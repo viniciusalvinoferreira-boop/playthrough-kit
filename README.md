@@ -133,3 +133,7 @@ pagar um café.
 
 Sem obrigação nenhuma. Reportar um bug ou contar que funcionou também ajuda
 bastante.
+
+---
+
+Feito por **Vinicius Alvino** · [Instagram](https://instagram.com/vinialvino)
