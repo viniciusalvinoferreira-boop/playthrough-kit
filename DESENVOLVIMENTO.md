@@ -70,6 +70,17 @@ O mínimo, sempre:
 
 O passo 2 pega quase tudo que quebra em silêncio. É barato e vale sempre.
 
+## Nunca suba versão com busca e troca global
+
+Já aconteceu: um `replace_all` de `1.3` para `1.4` nos arquivos atingiu também a
+constante `VIDEO_AUDIO_OFFSET_MS = 21.3`, que virou `21.4`. No bump seguinte
+virou `21.5`. O erro era de 0,2 ms, invisível na prática, e sobreviveu a duas
+versões sem ninguém notar.
+
+Ao subir a versão, edite **as linhas específicas**: o cabeçalho `@version`, o
+título do bloco de comentário, e os índices. Números soltos no meio do código
+não são versão, e nenhum deles deve mudar quando a versão muda.
+
 ## Versionamento
 
 Números pequenos, sem cerimônia:

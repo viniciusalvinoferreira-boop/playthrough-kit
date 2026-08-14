@@ -66,7 +66,9 @@ local ENV_BLOCK        = 960   -- 20 ms a 48k, resolucao do envelope
 -- Praticamente todo video de camera e celular usa AAC, entao a compensacao vem
 -- ligada. Se o audio do seu video for PCM (alguns .mov), ponha 0 aqui.
 -- Se o audio do video for AAC a 44,1 kHz, o valor certo e 23.2.
-local VIDEO_AUDIO_OFFSET_MS = 21.5
+-- 1024 samples a 48 kHz. Nao arredonde nem "atualize" este numero sem motivo:
+-- ele vem da conta 1024/48000, nao de tentativa e erro.
+local VIDEO_AUDIO_OFFSET_MS = 21.3
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }
