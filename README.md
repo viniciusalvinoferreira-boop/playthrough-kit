@@ -1,3 +1,5 @@
+*[Read in English](README.en.md)*
+
 # Playthrough Kit
 
 Grave vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
@@ -56,6 +58,13 @@ Em qualquer um dos dois casos você também precisa do ffmpeg:
 
 ```
 winget install Gyan.FFmpeg
+```
+
+As mensagens dos scripts vêm em português. Pra trocar pra inglês, abra cada um
+e mude a linha do topo:
+
+```lua
+local LANG = "pt"   -- troque pra "en"
 ```
 
 ## Antes do primeiro take: o golpe nas cordas

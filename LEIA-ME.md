@@ -1,3 +1,5 @@
+*[Manual in English](MANUAL-en.md)*
+
 # Playthrough Kit v1.6
 
 Gravar vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
@@ -72,6 +74,18 @@ Vale colocar atalho nos dois primeiros (na mesma janela, `Add shortcut`).
 Sugestão: `Shift+S` pro sync, `Shift+E` pro export.
 
 O template já aparece sozinho em `File` → `Project templates` → `Playthrough`.
+
+## Idioma das mensagens
+
+Os scripts vêm em português. Pra trocar pra inglês, abra cada um e mude a linha
+do topo:
+
+```lua
+local LANG = "pt"   -- troque pra "en"
+```
+
+Os códigos de erro são idênticos nos dois idiomas, então `PT-03` significa a
+mesma coisa de qualquer jeito.
 
 ---
 

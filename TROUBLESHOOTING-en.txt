@@ -1,0 +1,69 @@
+SOMETHING IS BROKEN, NOW WHAT?
+===============================
+
+Do these in order. Each step solves more cases than the one before,
+and step 3 alone tells "installed wrong" apart from "recorded wrong".
+
+
+1. IS THERE A CODE IN THE ERROR MESSAGE?
+
+   Every message from the kit carries a code, like [PT-03].
+   Open MANUAL-en.md and search for that code.
+   The cause and the fix are there, in the table.
+
+
+2. RUN THE DIAGNOSTIC
+
+   In REAPER:
+     Actions > Show action list > playthrough_diagnostico
+
+   It changes nothing in your project. It only inspects the environment
+   and writes a report to the console. Most of the time the report
+   itself points at the problem, with the error code attached.
+
+
+3. TEST WITHOUT RECORDING ANYTHING
+
+   The Teste/ folder in the repository has two files with a known offset.
+
+     - Drag both into REAPER
+     - Both starting at position 0
+     - Select both
+     - Run playthrough_sync_video
+
+   It must print +3000.0 ms in the console. A millisecond or two either
+   way is normal.
+
+   GOT 3000: the install is fine. The problem is in your recording, and
+   in almost every case it is the marker (see MANUAL-en.md, the section
+   called "READ THIS").
+
+   DID NOT: the problem is the install or the environment. Go to step 4
+   carrying the diagnostic report.
+
+   Note: if you installed through ReaPack, you did not get these files.
+   Download them from the repository:
+   https://github.com/viniciusalvinoferreira-boop/playthrough-kit
+
+
+4. ASK AN AI FOR HELP
+
+   Open ChatGPT, Claude, or whatever you use, and send three things:
+
+     a) the contents of AI-CONTEXT.md
+     b) the diagnostic report from step 2
+     c) what you did and what happened
+
+   AI-CONTEXT.md explains the whole architecture of the kit, the values
+   that look arbitrary but are not, and the known failure modes. With it
+   in hand the AI understands the system instead of guessing, and the
+   diagnostic gives it the real state of your machine.
+
+   That combination solves the overwhelming majority of cases with
+   nobody else involved.
+
+
+5. STILL STUCK?
+
+   Open an issue in the repository, including the diagnostic report.
+   Without the report, any answer is guesswork.

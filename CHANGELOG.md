@@ -1,5 +1,36 @@
 # Mudanças
 
+## v1.6
+
+**Scripts e documentação em dois idiomas**
+
+Cada script ganhou uma linha `local LANG = "pt"` no topo, que troca todas as
+mensagens entre português e inglês. São 75 chaves de texto, e todas existem nos
+dois idiomas: uma chave faltando não daria erro visível, apareceria um `nil` no
+meio da mensagem justo quando a pessoa está travada.
+
+Os códigos `PT-xx` continuam idênticos nos dois idiomas de propósito. Quem
+reportar "deu PT-03" pode estar lendo em qualquer língua.
+
+Mudança de desenho junto: as funções internas passam a devolver **códigos**
+(`silent`, `notfound`) em vez de frases. Antes o script comparava strings em
+português pra decidir o código do erro, o que quebraria assim que a mensagem
+virasse inglês.
+
+Documentação duplicada: `README.en.md`, `MANUAL-en.md`, `AI-CONTEXT.md` e
+`TROUBLESHOOTING-en.txt`, com links cruzados. O README em português continua
+sendo a página do repositório.
+
+**Correção: a compensação do AAC estava errada**
+
+`VIDEO_AUDIO_OFFSET_MS` estava em 21.5 em vez de 21.3. A causa foi busca e
+troca global ao subir a versão: `1.3` → `1.4` atingiu também o `21.3` da
+constante, e o bump seguinte fez `21.4` → `21.5`.
+
+O erro era de 0,2 ms, invisível na prática, e sobreviveu a duas versões. A
+regra de nunca subir versão com busca global está registrada no
+`DESENVOLVIMENTO.md`.
+
 ## v1.5
 
 **O último frame do vídeo se perdia no export**
