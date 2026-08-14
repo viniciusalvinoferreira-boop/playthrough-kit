@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: sync de video com audio
--- @version 1.5
+-- @version 1.6
 -- @author Vinicius Alvino
 -- @about
 --   Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_sync_video.lua
-  Playthrough Kit v1.5
+  Playthrough Kit v1.6
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -65,10 +65,100 @@ local ENV_BLOCK        = 960   -- 20 ms a 48k, resolucao do envelope
 --
 -- Praticamente todo video de camera e celular usa AAC, entao a compensacao vem
 -- ligada. Se o audio do seu video for PCM (alguns .mov), ponha 0 aqui.
--- Se o audio do video for AAC a 44,1 kHz, o valor certo e 23.2.
--- 1024 samples a 48 kHz. Nao arredonde nem "atualize" este numero sem motivo:
--- ele vem da conta 1024/48000, nao de tentativa e erro.
+-- Se o audio do video for AAC a 44,1 kHz, o valor certo e 23.2 (1024/44100).
+--
+-- O valor abaixo e 1024/48000. Nao arredonde nem "atualize" sem motivo: ele sai
+-- de uma conta, nao de tentativa e erro.
 local VIDEO_AUDIO_OFFSET_MS = 21.3
+-----------------------------------------------------------------------------
+
+-- idioma das mensagens: "pt" ou "en" --------------------------------------
+local LANG = "pt"
+
+local STR = {
+  pt = {
+    title      = "Playthrough: sync",
+    sel2       = "[PT-01]\n\nSelecione exatamente 2 itens: o de video e o de " ..
+                 "audio.\n\nSelecionados agora: %d",
+    needBoth   = "[PT-02]\n\nPreciso de um item de video e um de audio.\n\n" ..
+                 "Se os dois forem video, ou nenhum for, nao tem como saber " ..
+                 "qual mover. Extensoes reconhecidas como video: mp4, mov, " ..
+                 "m4v, mkv, avi, webm.",
+    labelVideo = "video",
+    labelRef   = "audio",
+    warnRate   = "%s: playrate %.4f (o script assume 1.0)",
+    warnTrim   = "%s: item cortado no inicio (%.3f s). Sincronize primeiro, " ..
+                 "corte depois.",
+    warnHead   = "[PT-05]\n\nEncontrei isto:\n\n  %s\n\nQuer continuar mesmo assim?",
+    srWarn     = "[PT-06] o audio esta rodando a %d Hz. Video e sempre 48 kHz; " ..
+                 "em outra taxa o REAPER resampla e takes longos podem " ..
+                 "derivar.\nConserto: Preferences > Audio > Device, marque " ..
+                 "Request sample rate com 48000.\n\n",
+    chunkHint  = "\n\nLembre: o marcador tem que aparecer nos DOIS sinais. " ..
+                 "Palma nao entra pelo captador. Use um golpe seco nas cordas " ..
+                 "abafadas, e forte.",
+    failVideo  = "Nao consegui analisar o video: ",
+    failRef    = "Nao consegui analisar o audio: ",
+    decodeHint = "\n\nSe for problema de decodificacao, converta pra H.264 ou " ..
+                 "instale o LAV Filters.",
+    eNoTake    = "item sem take",
+    eNoAcc     = "nao consegui abrir o audio",
+    eEmpty     = "item vazio",
+    eSilent    = "audio silencioso ou nao decodificado",
+    eNotFound  = "nao achei o transiente",
+    report     = "sync ok\n" ..
+                 "  marcador no video    : %.4f s  (medido %.4f, priming AAC -%.1f ms)\n" ..
+                 "  marcador na referencia: %.4f s\n" ..
+                 "  video deslocado      : %+.1f ms\n",
+    pushed     = "  o video comecaria antes do zero, entao ele foi pra 0 e todo\n" ..
+                 "  o resto andou %+.1f ms pra frente, mantendo o alinhamento\n",
+    lateMark   = "[PT-10] o marcador foi achado bem no fim da janela de busca. " ..
+                 "Confira de ouvido, pode ter pego a primeira nota no lugar do " ..
+                 "golpe.\n\n",
+    undo       = "Playthrough: sincronizar video com audio",
+  },
+  en = {
+    title      = "Playthrough: sync",
+    sel2       = "[PT-01]\n\nSelect exactly 2 items: the video and the audio." ..
+                 "\n\nCurrently selected: %d",
+    needBoth   = "[PT-02]\n\nI need one video item and one audio item.\n\n" ..
+                 "If both are video, or neither is, there is no way to tell " ..
+                 "which one to move. Recognized video extensions: mp4, mov, " ..
+                 "m4v, mkv, avi, webm.",
+    labelVideo = "video",
+    labelRef   = "audio",
+    warnRate   = "%s: playrate %.4f (this script assumes 1.0)",
+    warnTrim   = "%s: item trimmed at the start (%.3f s). Sync first, trim later.",
+    warnHead   = "[PT-05]\n\nI found this:\n\n  %s\n\nContinue anyway?",
+    srWarn     = "[PT-06] audio is running at %d Hz. Video is always 48 kHz; " ..
+                 "at any other rate REAPER resamples and long takes may " ..
+                 "drift.\nFix: Preferences > Audio > Device, tick Request " ..
+                 "sample rate and set it to 48000.\n\n",
+    chunkHint  = "\n\nRemember: the marker must exist in BOTH signals. A hand " ..
+                 "clap does not reach the pickup. Use a hard hit on muted " ..
+                 "strings.",
+    failVideo  = "Could not analyze the video: ",
+    failRef    = "Could not analyze the audio: ",
+    decodeHint = "\n\nIf this is a decoding problem, convert to H.264 or " ..
+                 "install LAV Filters.",
+    eNoTake    = "item has no take",
+    eNoAcc     = "could not open the audio",
+    eEmpty     = "empty item",
+    eSilent    = "silent audio, or not decoded",
+    eNotFound  = "marker not found",
+    report     = "sync ok\n" ..
+                 "  marker in video      : %.4f s  (measured %.4f, AAC priming -%.1f ms)\n" ..
+                 "  marker in reference  : %.4f s\n" ..
+                 "  video moved          : %+.1f ms\n",
+    pushed     = "  the video would start before zero, so it went to 0 and\n" ..
+                 "  everything else moved %+.1f ms forward, staying aligned\n",
+    lateMark   = "[PT-10] the marker was found near the end of the search " ..
+                 "window. Check by ear: it may have caught the first note " ..
+                 "instead of the hit.\n\n",
+    undo       = "Playthrough: sync video with audio",
+  },
+}
+local T = STR[LANG] or STR.en
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }
@@ -97,31 +187,31 @@ local function itemWarnings(item, label)
 
   local rate = reaper.GetMediaItemTakeInfo_Value(take, "D_PLAYRATE")
   if math.abs(rate - 1.0) > 0.0001 then
-    out[#out+1] = string.format("%s: playrate %.4f (o script assume 1.0)", label, rate)
+    out[#out+1] = string.format(T.warnRate, label, rate)
   end
 
   local offs = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
   if offs > 0.0001 then
-    out[#out+1] = string.format("%s: item cortado no inicio (%.3f s). " ..
-                               "Sincronize primeiro, corte depois.", label, offs)
+    out[#out+1] = string.format(T.warnTrim, label, offs)
   end
   return out
 end
 
 -- devolve o offset (segundos, relativo ao inicio do item) do ataque mais forte
 local function findTransient(item)
+  -- devolve codigo, nao texto: a traducao acontece na hora de mostrar
   local take = reaper.GetActiveTake(item)
-  if not take then return nil, "item sem take" end
+  if not take then return nil, "notake" end
 
   local acc = reaper.CreateTakeAudioAccessor(take)
-  if not acc then return nil, "nao consegui abrir o audio" end
+  if not acc then return nil, "noacc" end
 
   local t0  = reaper.GetAudioAccessorStartTime(acc)
   local t1  = reaper.GetAudioAccessorEndTime(acc)
   local dur = math.min(SEARCH_WINDOW, t1 - t0)
   if dur <= 0 then
     reaper.DestroyAudioAccessor(acc)
-    return nil, "item vazio"
+    return nil, "empty"
   end
 
   -- Le um canal so. Com numchannels=1 nao existe ambiguidade de layout de
@@ -157,7 +247,7 @@ local function findTransient(item)
 
   if peak < 0.001 then
     reaper.DestroyAudioAccessor(acc)
-    return nil, "audio silencioso ou nao decodificado"
+    return nil, "silent"
   end
 
   -- O piso de ruido vem do percentil 20 do envelope, nao do minimo: um unico
@@ -188,15 +278,14 @@ local function findTransient(item)
   end
 
   reaper.DestroyAudioAccessor(acc)
-  if not hit then return nil, "nao achei o transiente" end
+  if not hit then return nil, "notfound" end
   return hit
 end
 
 -- main ---------------------------------------------------------------------
 local n = reaper.CountSelectedMediaItems(0)
 if n ~= 2 then
-  reaper.MB("[PT-01]\n\nSelecione exatamente 2 itens: o de video e o da " ..
-            "guitarra.\n\nSelecionados agora: " .. n, "Playthrough: sync", 0)
+  reaper.MB(string.format(T.sel2, n), T.title, 0)
   return
 end
 
@@ -209,20 +298,16 @@ if isVideo(a) and not isVideo(b) then
 elseif isVideo(b) and not isVideo(a) then
   vid, ref = b, a
 else
-  reaper.MB("[PT-02]\n\nPreciso de um item de video e um de audio.\n\n" ..
-            "Se os dois forem video, ou nenhum for, nao tem como saber qual " ..
-            "mover. Extensoes reconhecidas como video: mp4, mov, m4v, mkv, " ..
-            "avi, webm.", "Playthrough: sync", 0)
+  reaper.MB(T.needBoth, T.title, 0)
   return
 end
 
 local warn = {}
-for _, w in ipairs(itemWarnings(vid, "video"))    do warn[#warn+1] = w end
-for _, w in ipairs(itemWarnings(ref, "guitarra")) do warn[#warn+1] = w end
+for _, w in ipairs(itemWarnings(vid, T.labelVideo)) do warn[#warn+1] = w end
+for _, w in ipairs(itemWarnings(ref, T.labelRef))   do warn[#warn+1] = w end
 if #warn > 0 then
-  local msg = "[PT-05]\n\nEncontrei isto:\n\n  " .. table.concat(warn, "\n  ") ..
-              "\n\nQuer continuar mesmo assim?"
-  if reaper.MB(msg, "Playthrough: sync", 1) ~= 1 then return end
+  local msg = string.format(T.warnHead, table.concat(warn, "\n  "))
+  if reaper.MB(msg, T.title, 1) ~= 1 then return end
 end
 
 -- vale a taxa em que o audio realmente roda: a do device, a menos que o projeto
@@ -234,37 +319,32 @@ local projUse  = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
 local efetivo  = (projUse ~= 0) and projSr or (tonumber(devSr) or 0)
 
 if efetivo > 0 and math.abs(efetivo - 48000) > 1 then
-  reaper.ShowConsoleMsg(string.format(
-    "[PT-06] o audio esta rodando a %d Hz. Video e sempre 48 kHz; em outra " ..
-    "taxa o REAPER resampla e takes longos podem derivar.\nConserto: " ..
-    "Preferences > Audio > Device, marque Request sample rate com 48000.\n\n",
-    efetivo))
+  reaper.ShowConsoleMsg(string.format(T.srWarn, efetivo))
 end
 
 local tVid, errV = findTransient(vid)
 local tRef, errR = findTransient(ref)
 
-local CHUNK_HINT =
-  "\n\nLembre: o marcador tem que aparecer nos DOIS sinais. Palma nao entra " ..
-  "pelo captador. Use um golpe seco nas cordas abafadas, e forte."
-
--- audio que nao decodifica e audio sem chunk sao problemas diferentes e tem
+-- audio que nao decodifica e audio sem golpe sao problemas diferentes e tem
 -- consertos diferentes, entao ganham codigos diferentes
+local ERRMSG = { notake = T.eNoTake, noacc = T.eNoAcc, empty = T.eEmpty,
+                 silent = T.eSilent, notfound = T.eNotFound }
 local function errCode(err)
-  if err == "audio silencioso ou nao decodificado" then return "PT-04" end
+  if err == "silent" then return "PT-04" end
   return "PT-03"
+end
+local function errText(err)
+  return ERRMSG[err] or tostring(err)
 end
 
 if not tVid then
-  reaper.MB("[" .. errCode(errV) .. "]\n\nNao consegui analisar o video: " ..
-            tostring(errV) ..
-            "\n\nSe for problema de decodificacao, converta pra H.264 ou " ..
-            "instale o LAV Filters." .. CHUNK_HINT, "Playthrough: sync", 0)
+  reaper.MB("[" .. errCode(errV) .. "]\n\n" .. T.failVideo .. errText(errV) ..
+            T.decodeHint .. T.chunkHint, T.title, 0)
   return
 end
 if not tRef then
-  reaper.MB("[" .. errCode(errR) .. "]\n\nNao consegui analisar a guitarra: " ..
-            tostring(errR) .. CHUNK_HINT, "Playthrough: sync", 0)
+  reaper.MB("[" .. errCode(errR) .. "]\n\n" .. T.failRef .. errText(errR) ..
+            T.chunkHint, T.title, 0)
   return
 end
 
@@ -305,27 +385,18 @@ if novaPos < 0 then
 end
 reaper.SetMediaItemInfo_Value(vid, "D_POSITION", novaPos)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Playthrough: sync video com audio", -1)
+reaper.Undo_EndBlock(T.undo, -1)
 
 reaper.ShowConsoleMsg(string.format(
-  "sync ok\n" ..
-  "  marcador no video    : %.4f s  (medido %.4f, priming AAC -%.1f ms)\n" ..
-  "  marcador na referencia: %.4f s\n" ..
-  "  video deslocado      : %+.1f ms\n",
-  tVidCorr, tVid, VIDEO_AUDIO_OFFSET_MS, tRef, delta * 1000))
+  T.report, tVidCorr, tVid, VIDEO_AUDIO_OFFSET_MS, tRef, delta * 1000))
 
 if empurrou > 0 then
-  reaper.ShowConsoleMsg(string.format(
-    "  o video comecaria antes do zero, entao ele foi pra 0 e todo o resto\n" ..
-    "  andou %+.1f ms pra frente, mantendo o alinhamento entre as tracks\n",
-    empurrou * 1000))
+  reaper.ShowConsoleMsg(string.format(T.pushed, empurrou * 1000))
 end
 reaper.ShowConsoleMsg("\n")
 
 -- Se o marcador caiu perto do fim da janela de busca, e provavel que o script
 -- tenha pego a primeira nota da musica no lugar do chunk.
 if tVid > SEARCH_WINDOW * 0.8 or tRef > SEARCH_WINDOW * 0.8 then
-  reaper.ShowConsoleMsg(
-    "[PT-10] o marcador foi achado bem no fim da janela de busca. Confira " ..
-    "de ouvido, pode ter pego a primeira nota no lugar do chunk.\n\n")
+  reaper.ShowConsoleMsg(T.lateMark)
 end

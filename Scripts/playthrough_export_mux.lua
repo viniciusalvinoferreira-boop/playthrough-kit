@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: export sem re-encode
--- @version 1.5
+-- @version 1.6
 -- @author Vinicius Alvino
 -- @about
 --   Renderiza o mix na extensao do item de video e junta os dois com ffmpeg em
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_export_mux.lua
-  Playthrough Kit v1.5
+  Playthrough Kit v1.6
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -36,6 +36,60 @@
 local FFMPEG_PATH = ""         -- vazio = localiza sozinho
 local AUDIO_KBPS  = "320k"     -- bitrate do AAC final
 local SUFFIX      = "_final"   -- sufixo do arquivo de saida
+-----------------------------------------------------------------------------
+
+-- idioma das mensagens: "pt" ou "en" --------------------------------------
+local LANG = "pt"
+
+local STR = {
+  pt = {
+    title     = "Playthrough: export",
+    sel1      = "[PT-01]\n\nSelecione apenas o item de video.",
+    notVideo  = "[PT-02]\n\nO item selecionado nao parece ser video.",
+    noFFmpeg  = "[PT-07]\n\nNao encontrei o ffmpeg.\n\nAbra o PowerShell e " ..
+                "rode:\n\n    winget install Gyan.FFmpeg\n\nSe ja instalou, " ..
+                "feche e reabra o REAPER, ou preencha a variavel FFMPEG_PATH " ..
+                "no topo deste script com o caminho do ffmpeg.exe.",
+    srAsk     = "[PT-06]\n\nO audio esta rodando a %d Hz.\n\nVideo e sempre " ..
+                "48 kHz. Em outra taxa o audio e resampleado e takes longos " ..
+                "podem derivar.\n\nConserto: Preferences > Audio > Device, " ..
+                "marque Request sample rate com 48000 e reinicie o REAPER.\n\n" ..
+                "Continuar assim mesmo?",
+    renderNo  = "[PT-08]\n\nO render nao gerou:\n%s\n\nSe o REAPER estiver com " ..
+                "render em segundo plano ligado, espere terminar e rode de novo.",
+    batNo     = "Nao consegui escrever o arquivo temporario em %s",
+    okConsole = "pronto, sem re-encode: %s\n\n",
+    okBox     = "Video final gerado:\n\n%s\n\nO stream de video e identico ao " ..
+                "da camera. So o audio mudou.",
+    failMux   = "[PT-09]\n\nO ffmpeg nao gerou o arquivo.\n\nBinario tentado:\n" ..
+                "%s\n\nA saida completa do erro foi pro console: " ..
+                "View > Show console output.",
+  },
+  en = {
+    title     = "Playthrough: export",
+    sel1      = "[PT-01]\n\nSelect the video item only.",
+    notVideo  = "[PT-02]\n\nThe selected item does not look like video.",
+    noFFmpeg  = "[PT-07]\n\nffmpeg not found.\n\nOpen PowerShell and run:\n\n" ..
+                "    winget install Gyan.FFmpeg\n\nIf it is already installed, " ..
+                "close and reopen REAPER, or set the FFMPEG_PATH variable at " ..
+                "the top of this script to the full path of ffmpeg.exe.",
+    srAsk     = "[PT-06]\n\nAudio is running at %d Hz.\n\nVideo is always " ..
+                "48 kHz. At any other rate the audio gets resampled and long " ..
+                "takes may drift.\n\nFix: Preferences > Audio > Device, tick " ..
+                "Request sample rate, set 48000 and restart REAPER.\n\n" ..
+                "Continue anyway?",
+    renderNo  = "[PT-08]\n\nThe render did not produce:\n%s\n\nIf REAPER is set " ..
+                "to render in the background, wait for it to finish and run again.",
+    batNo     = "Could not write the temporary file in %s",
+    okConsole = "done, no re-encode: %s\n\n",
+    okBox     = "Final video created:\n\n%s\n\nThe video stream is identical to " ..
+                "the camera original. Only the audio changed.",
+    failMux   = "[PT-09]\n\nffmpeg did not produce the file.\n\nBinary tried:\n" ..
+                "%s\n\nThe full error output went to the console: " ..
+                "View > Show console output.",
+  },
+}
+local T = STR[LANG] or STR.en
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }
@@ -107,8 +161,7 @@ end
 
 local item = reaper.GetSelectedMediaItem(0, 0)
 if not item or reaper.CountSelectedMediaItems(0) ~= 1 then
-  reaper.MB("[PT-01]\n\nSelecione apenas o item de video.",
-            "Playthrough: export", 0)
+  reaper.MB(T.sel1, T.title, 0)
   return
 end
 
@@ -118,18 +171,13 @@ local srcFile = reaper.GetMediaSourceFileName(
                   reaper.GetMediaItemTake_Source(take), "")
 local ext = srcFile:match("%.([^%.\\/]+)$")
 if not ext or not VIDEO_EXT[ext:lower()] then
-  reaper.MB("[PT-02]\n\nO item selecionado nao parece ser video.",
-            "Playthrough: export", 0)
+  reaper.MB(T.notVideo, T.title, 0)
   return
 end
 
 local ffmpeg = findFFmpeg()
 if not ffmpeg then
-  reaper.MB("[PT-07]\n\nNao encontrei o ffmpeg.\n\n" ..
-            "Abra o PowerShell e rode:\n\n    winget install Gyan.FFmpeg\n\n" ..
-            "Se ja instalou, feche e reabra o REAPER, ou preencha a variavel " ..
-            "FFMPEG_PATH no topo deste script com o caminho do ffmpeg.exe.",
-            "Playthrough: export", 0)
+  reaper.MB(T.noFFmpeg, T.title, 0)
   return
 end
 
@@ -142,12 +190,7 @@ local projUse  = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
 local efetivo  = (projUse ~= 0) and projSr or (tonumber(devSr) or 0)
 
 if efetivo > 0 and math.abs(efetivo - 48000) > 1 then
-  if reaper.MB(string.format(
-       "[PT-06]\n\nO audio esta rodando a %d Hz.\n\n" ..
-       "Video e sempre 48 kHz. Em outra taxa o audio e resampleado e takes " ..
-       "longos podem derivar.\n\nConserto: Preferences > Audio > Device, " ..
-       "marque Request sample rate com 48000 e reinicie o REAPER.\n\n" ..
-       "Continuar assim mesmo?", efetivo), "Playthrough: export", 1) ~= 1 then
+  if reaper.MB(string.format(T.srAsk, efetivo), T.title, 1) ~= 1 then
     return
   end
 end
@@ -192,9 +235,7 @@ local waitStart = os.clock()
 while not reaper.file_exists(wavPath) and (os.clock() - waitStart) < 15 do end
 
 if not reaper.file_exists(wavPath) then
-  reaper.MB("[PT-08]\n\nO render nao gerou:\n" .. wavPath ..
-            "\n\nSe o REAPER estiver com render em segundo plano ligado, " ..
-            "espere terminar e rode de novo.", "Playthrough: export", 0)
+  reaper.MB(string.format(T.renderNo, wavPath), T.title, 0)
   return
 end
 
@@ -203,7 +244,7 @@ end
 local batPath = dir .. "\\_mux_tmp.bat"
 local bat = io.open(batPath, "w")
 if not bat then
-  reaper.MB("Nao consegui escrever o .bat em " .. dir, "Playthrough: export", 0)
+  reaper.MB(string.format(T.batNo, dir), T.title, 0)
   return
 end
 
@@ -221,14 +262,9 @@ local out = reaper.ExecProcess('cmd.exe /C "' .. batPath .. '"', 0)
 os.remove(batPath)
 
 if reaper.file_exists(outPath) then
-  reaper.ShowConsoleMsg("pronto, sem re-encode: " .. outPath .. "\n\n")
-  reaper.MB("Video final gerado:\n\n" .. outPath ..
-            "\n\nO stream de video e identico ao da camera. So o audio mudou.",
-            "Playthrough: export", 0)
+  reaper.ShowConsoleMsg(string.format(T.okConsole, outPath))
+  reaper.MB(string.format(T.okBox, outPath), T.title, 0)
 else
-  reaper.ShowConsoleMsg("ffmpeg usado: " .. ffmpeg .. "\n" ..
-                        tostring(out) .. "\n\n")
-  reaper.MB("[PT-09]\n\nO ffmpeg nao gerou o arquivo.\n\nBinario tentado:\n" .. ffmpeg ..
-            "\n\nA saida completa do erro foi pro console: " ..
-            "View > Show console output.", "Playthrough: export", 0)
+  reaper.ShowConsoleMsg("ffmpeg: " .. ffmpeg .. "\n" .. tostring(out) .. "\n\n")
+  reaper.MB(string.format(T.failMux, ffmpeg), T.title, 0)
 end

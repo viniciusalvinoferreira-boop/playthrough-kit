@@ -4,7 +4,7 @@
 
     <reapack name="playthrough_sync_video.lua" type="script"
              desc="Playthrough Kit: sync de video com audio">
-      <version name="1.5" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
+      <version name="1.6" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
         <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/Scripts/playthrough_sync_video.lua</source>
       </version>
       <metadata>
@@ -18,7 +18,7 @@ Selecione o item de video e o da guitarra, e rode.]]></description>
 
     <reapack name="playthrough_export_mux.lua" type="script"
              desc="Playthrough Kit: export sem re-encode">
-      <version name="1.5" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
+      <version name="1.6" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
         <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/Scripts/playthrough_export_mux.lua</source>
       </version>
       <metadata>
@@ -34,7 +34,7 @@ Selecione apenas o item de video, e rode.]]></description>
 
     <reapack name="playthrough_diagnostico.lua" type="script"
              desc="Playthrough Kit: diagnostico">
-      <version name="1.5" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
+      <version name="1.6" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
         <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/Scripts/playthrough_diagnostico.lua</source>
       </version>
       <metadata>
@@ -48,7 +48,7 @@ Copie o relatorio inteiro e mande junto com a sua duvida.]]></description>
 
     <reapack name="Playthrough.RPP" type="projecttpl"
              desc="Playthrough Kit: template de projeto">
-      <version name="1.5" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
+      <version name="1.6" author="Vinicius Alvino" time="2026-08-13T21:00:00Z">
         <source>https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/dev/ProjectTemplates/Playthrough.RPP</source>
       </version>
       <metadata>

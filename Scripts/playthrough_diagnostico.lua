@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: diagnostico
--- @version 1.5
+-- @version 1.6
 -- @author Vinicius Alvino
 -- @about
 --   Relatorio de ambiente pra quando algo nao funciona. Nao altera nada no
@@ -7,7 +7,7 @@
 
 --[[
   playthrough_diagnostico.lua
-  Playthrough Kit v1.5
+  Playthrough Kit v1.6
 
   Nao muda nada no seu projeto. Só olha o ambiente e escreve um relatorio no
   console do REAPER.
@@ -25,10 +25,108 @@
     relatorio inclui a analise deles tambem.
 ]]
 
+-- idioma das mensagens: "pt" ou "en" --------------------------------------
+local LANG = "pt"
+
+local STR = {
+  pt = {
+    header    = " PLAYTHROUGH KIT - RELATORIO DE AMBIENTE",
+    yes       = "sim",
+    no        = "nao",
+    reaper    = "REAPER            : ",
+    resource  = "Pasta de recursos : ",
+    sws       = "SWS instalado     : ",
+    installed = "Instalado em      : ",
+    unknown   = "nao consegui determinar",
+    notFound  = "NAO ENCONTRADO",
+    ffmpeg    = "ffmpeg            : ",
+    foundVia  = "  achado via      : ",
+    version   = "  versao          : ",
+    cantRead  = "nao consegui ler",
+    cantRun   = "nao consegui executar o binario",
+    ffNone    = "ffmpeg            : NAO ENCONTRADO   [PT-07]",
+    ffFix     = "  conserto        : winget install Gyan.FFmpeg, depois reabra o REAPER",
+    srReal    = "Sample rate real  : %d Hz  (interface de audio)",
+    srUnread  = "Sample rate real  : nao consegui ler (interface fechada?)",
+    srPin     = "  projeto crava   : %d Hz",
+    srNoPin   = "  projeto crava   : nao (guarda %d Hz sem efeito)",
+    srWarn    = "  ATENCAO         : o audio esta rodando fora de 48000 Hz   [PT-06]",
+    srFix1    = "  conserto        : Preferences > Audio > Device, marque",
+    srFix2    = "                    Request sample rate com 48000, e reinicie o REAPER",
+    selected  = "Itens selecionados: ",
+    selHint   = "  (selecione o video e o audio e rode de novo pra analisar os dois)",
+    itemHdr   = "  --- item %d ---",
+    iFile     = "  arquivo         : ",
+    iPos      = "  posicao         : %.3f s",
+    iLen      = "  duracao         : %.3f s",
+    iRate     = "  playrate        : %.4f%s",
+    iTrim     = "  corte no inicio : %.3f s%s",
+    iPeak     = "  pico do audio   : %.4f%s",
+    wRate     = "   ATENCAO: deveria ser 1.0   [PT-05]",
+    wTrim     = "   ATENCAO: sincronize antes de cortar   [PT-05]",
+    wSilent   = "   ATENCAO: silencioso ou nao decodifica   [PT-04]",
+    peakFail  = "  pico do audio   : falhou (%s)   [PT-04]",
+    noTake    = "  item sem take ativo",
+    foot1     = " Copie tudo acima e mande junto com a sua duvida.",
+    foot2     = " Documentacao e arquivos de teste (quem instalou pelo",
+    foot3     = " ReaPack nao recebe esses arquivos junto):",
+    foot4     = "   CONTEXTO-IA.md .... cole numa IA junto com este relatorio",
+    foot5     = "   LEIA-ME.md ........ tabela dos codigos [PT-xx]",
+    foot6     = "   Teste/ ............ dois arquivos pra validar a instalacao",
+  },
+  en = {
+    header    = " PLAYTHROUGH KIT - ENVIRONMENT REPORT",
+    yes       = "yes",
+    no        = "no",
+    reaper    = "REAPER            : ",
+    resource  = "Resource path     : ",
+    sws       = "SWS installed     : ",
+    installed = "Installed in      : ",
+    unknown   = "could not determine",
+    notFound  = "NOT FOUND",
+    ffmpeg    = "ffmpeg            : ",
+    foundVia  = "  found via       : ",
+    version   = "  version         : ",
+    cantRead  = "could not read",
+    cantRun   = "could not run the binary",
+    ffNone    = "ffmpeg            : NOT FOUND   [PT-07]",
+    ffFix     = "  fix             : winget install Gyan.FFmpeg, then reopen REAPER",
+    srReal    = "Actual sample rate: %d Hz  (audio interface)",
+    srUnread  = "Actual sample rate: could not read (interface closed?)",
+    srPin     = "  project pins    : %d Hz",
+    srNoPin   = "  project pins    : no (stores %d Hz with no effect)",
+    srWarn    = "  WARNING         : audio is running outside 48000 Hz   [PT-06]",
+    srFix1    = "  fix             : Preferences > Audio > Device, tick",
+    srFix2    = "                    Request sample rate with 48000, then restart REAPER",
+    selected  = "Selected items    : ",
+    selHint   = "  (select the video and the audio, then run again to analyze both)",
+    itemHdr   = "  --- item %d ---",
+    iFile     = "  file            : ",
+    iPos      = "  position        : %.3f s",
+    iLen      = "  length          : %.3f s",
+    iRate     = "  playrate        : %.4f%s",
+    iTrim     = "  trimmed start   : %.3f s%s",
+    iPeak     = "  audio peak      : %.4f%s",
+    wRate     = "   WARNING: should be 1.0   [PT-05]",
+    wTrim     = "   WARNING: sync before trimming   [PT-05]",
+    wSilent   = "   WARNING: silent, or not decoding   [PT-04]",
+    peakFail  = "  audio peak      : failed (%s)   [PT-04]",
+    noTake    = "  item has no active take",
+    foot1     = " Copy everything above and send it with your question.",
+    foot2     = " Docs and test files (installing via ReaPack does not",
+    foot3     = " bring these files along):",
+    foot4     = "   AI-CONTEXT.md ..... paste into an AI along with this report",
+    foot5     = "   MANUAL-en.md ...... table of the [PT-xx] codes",
+    foot6     = "   Teste/ ............ two files to validate the install",
+  },
+}
+local T = STR[LANG] or STR.en
+-----------------------------------------------------------------------------
+
 local L = {}
 local function say(s) L[#L+1] = s or "" end
 
-local function fmtBool(b) if b then return "sim" else return "nao" end end
+local function fmtBool(b) if b then return T.yes else return T.no end end
 
 -- mesma busca do export, replicada aqui de proposito: cada script do kit e
 -- independente, entao um instala sem o outro e nada quebra
@@ -115,15 +213,15 @@ end
 
 -- coleta -------------------------------------------------------------------
 say("========================================")
-say(" PLAYTHROUGH KIT - RELATORIO DE AMBIENTE")
+say(T.header)
 say("========================================")
 say()
 
 -- GetAppVersion devolve UM valor so ("7.73/x64"), nao dois
 local ver = reaper.GetAppVersion()
-say("REAPER            : " .. tostring(ver))
-say("Pasta de recursos : " .. reaper.GetResourcePath())
-say("SWS instalado     : " .. fmtBool(reaper.APIExists("CF_GetSWSVersion")))
+say(T.reaper   .. tostring(ver))
+say(T.resource .. reaper.GetResourcePath())
+say(T.sws      .. fmtBool(reaper.APIExists("CF_GetSWSVersion")))
 say()
 
 -- Os outros scripts do kit ficam na mesma pasta que este aqui, seja ela qual
@@ -133,13 +231,13 @@ say()
 -- tinha instalado certinho pelo ReaPack.
 local _, thisPath = reaper.get_action_context()
 local myDir = thisPath and splitPath(thisPath) or nil
-say("Instalado em      : " .. (myDir or "nao consegui determinar"))
+say(T.installed .. (myDir or T.unknown))
 if myDir then
   for _, f in ipairs({ "playthrough_sync_video.lua",
                        "playthrough_export_mux.lua",
                        "playthrough_diagnostico.lua" }) do
     say(string.format("  %-32s %s", f,
-        reaper.file_exists(myDir .. "\\" .. f) and "OK" or "NAO ENCONTRADO"))
+        reaper.file_exists(myDir .. "\\" .. f) and "OK" or T.notFound))
   end
 end
 say()
@@ -147,18 +245,18 @@ say()
 -- ffmpeg
 local ffmpeg, how = findFFmpeg()
 if ffmpeg then
-  say("ffmpeg            : " .. ffmpeg)
-  say("  achado via      : " .. how)
+  say(T.ffmpeg   .. ffmpeg)
+  say(T.foundVia .. how)
   local out = reaper.ExecProcess('"' .. ffmpeg .. '" -version', 8000)
   if out then
     local first = out:match("ffmpeg version [^\r\n]*")
-    say("  versao          : " .. (first or "nao consegui ler"))
+    say(T.version .. (first or T.cantRead))
   else
-    say("  versao          : nao consegui executar o binario")
+    say(T.version .. T.cantRun)
   end
 else
-  say("ffmpeg            : NAO ENCONTRADO   [PT-07]")
-  say("  conserto        : winget install Gyan.FFmpeg, depois reabra o REAPER")
+  say(T.ffNone)
+  say(T.ffFix)
 end
 say()
 
@@ -172,73 +270,71 @@ local projSr   = reaper.GetSetProjectInfo(0, "PROJECT_SRATE", 0, false)
 local projUse  = reaper.GetSetProjectInfo(0, "PROJECT_SRATE_USE", 0, false)
 
 if devRate > 0 then
-  say(string.format("Sample rate real  : %d Hz  (interface de audio)", devRate))
+  say(string.format(T.srReal, devRate))
 else
-  say("Sample rate real  : nao consegui ler (interface fechada?)")
+  say(T.srUnread)
 end
 if projUse ~= 0 then
-  say(string.format("  projeto crava   : %d Hz", projSr))
+  say(string.format(T.srPin, projSr))
 else
-  say(string.format("  projeto crava   : nao (guarda %d Hz sem efeito)", projSr))
+  say(string.format(T.srNoPin, projSr))
 end
 
 local efetivo = (projUse ~= 0) and projSr or devRate
 if efetivo > 0 and math.abs(efetivo - 48000) > 1 then
-  say("  ATENCAO         : o audio esta rodando fora de 48000 Hz   [PT-06]")
-  say("  conserto        : Preferences > Audio > Device, marque")
-  say("                    Request sample rate com 48000, e reinicie o REAPER")
+  say(T.srWarn)
+  say(T.srFix1)
+  say(T.srFix2)
 end
 say()
 
 -- itens selecionados
 local n = reaper.CountSelectedMediaItems(0)
-say("Itens selecionados: " .. n)
+say(T.selected .. n)
 if n == 0 then
-  say("  (selecione o video e a guitarra e rode de novo pra analisar os dois)")
+  say(T.selHint)
 end
 
 for i = 0, n - 1 do
   local item = reaper.GetSelectedMediaItem(0, i)
   local take = reaper.GetActiveTake(item)
   say()
-  say("  --- item " .. (i + 1) .. " ---")
+  say(string.format(T.itemHdr, i + 1))
   if take then
     local src = reaper.GetMediaItemTake_Source(take)
     local fn  = src and reaper.GetMediaSourceFileName(src, "") or "?"
     local _, nome = splitPath(fn)
-    say("  arquivo         : " .. nome)
-    say(string.format("  posicao         : %.3f s", reaper.GetMediaItemInfo_Value(item, "D_POSITION")))
-    say(string.format("  duracao         : %.3f s", reaper.GetMediaItemInfo_Value(item, "D_LENGTH")))
+    say(T.iFile .. nome)
+    say(string.format(T.iPos, reaper.GetMediaItemInfo_Value(item, "D_POSITION")))
+    say(string.format(T.iLen, reaper.GetMediaItemInfo_Value(item, "D_LENGTH")))
     local rate = reaper.GetMediaItemTakeInfo_Value(take, "D_PLAYRATE")
     local offs = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-    say(string.format("  playrate        : %.4f%s", rate,
-        math.abs(rate - 1.0) > 0.0001 and "   ATENCAO: deveria ser 1.0   [PT-05]" or ""))
-    say(string.format("  corte no inicio : %.3f s%s", offs,
-        offs > 0.0001 and "   ATENCAO: sincronize antes de cortar   [PT-05]" or ""))
+    say(string.format(T.iRate, rate,
+        math.abs(rate - 1.0) > 0.0001 and T.wRate or ""))
+    say(string.format(T.iTrim, offs, offs > 0.0001 and T.wTrim or ""))
 
     local peak, err = probeItem(item)
     if peak then
-      say(string.format("  pico do audio   : %.4f%s", peak,
-          peak < 0.001 and "   ATENCAO: silencioso ou nao decodifica   [PT-04]" or ""))
+      say(string.format(T.iPeak, peak, peak < 0.001 and T.wSilent or ""))
     else
-      say("  pico do audio   : falhou (" .. tostring(err) .. ")   [PT-04]")
+      say(string.format(T.peakFail, tostring(err)))
     end
   else
-    say("  item sem take ativo")
+    say(T.noTake)
   end
 end
 
 say()
 say("========================================")
-say(" Copie tudo acima e mande junto com a sua duvida.")
+say(T.foot1)
 say()
-say(" Documentacao e arquivos de teste (quem instalou pelo")
-say(" ReaPack nao recebe esses arquivos junto):")
+say(T.foot2)
+say(T.foot3)
 say("   https://github.com/viniciusalvinoferreira-boop/playthrough-kit")
 say()
-say("   CONTEXTO-IA.md .... cole numa IA junto com este relatorio")
-say("   LEIA-ME.md ........ tabela dos codigos [PT-xx]")
-say("   Teste/ ............ dois arquivos pra validar a instalacao")
+say(T.foot4)
+say(T.foot5)
+say(T.foot6)
 say("========================================")
 say()
 
