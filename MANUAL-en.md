@@ -1,6 +1,6 @@
 *[Manual em português](LEIA-ME.md)*
 
-# Playthrough Kit v1.6
+# Playthrough Kit v1.7
 
 Record guitar playthrough videos without syncing audio by hand, and without
 losing quality on export.
@@ -85,12 +85,14 @@ https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/ma
 
 ## Message language
 
-Script messages ship in Portuguese. To switch to English, open each script and
-change the line near the top:
+The first time you run any script from the kit, it asks whether you want
+messages in Portuguese or English, and remembers your answer.
 
-```lua
-local LANG = "pt"   -- change to "en"
-```
+To change it later, run the **`Playthrough Kit: idioma`** action.
+
+The choice lives in REAPER's own configuration, not inside the scripts. That
+matters because ReaPack overwrites script files when updating: if the language
+lived in the code, your preference would be wiped on every new version.
 
 Error codes are identical in both languages, so `PT-03` means the same thing
 either way.

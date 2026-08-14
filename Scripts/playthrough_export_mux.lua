@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: export sem re-encode
--- @version 1.6
+-- @version 1.7
 -- @author Vinicius Alvino
 -- @about
 --   Renderiza o mix na extensao do item de video e junta os dois com ffmpeg em
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_export_mux.lua
-  Playthrough Kit v1.6
+  Playthrough Kit v1.7
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -38,8 +38,10 @@ local AUDIO_KBPS  = "320k"     -- bitrate do AAC final
 local SUFFIX      = "_final"   -- sufixo do arquivo de saida
 -----------------------------------------------------------------------------
 
--- idioma das mensagens: "pt" ou "en" --------------------------------------
-local LANG = "pt"
+-- idioma das mensagens ------------------------------------------------------
+-- "auto" usa a escolha guardada (perguntada uma vez pelo kit). "pt" ou "en"
+-- forcam um idioma e nunca perguntam nada.
+local LANG = "auto"
 
 local STR = {
   pt = {
@@ -89,7 +91,30 @@ local STR = {
                 "View > Show console output.",
   },
 }
-local T = STR[LANG] or STR.en
+-- A escolha mora no ExtState do REAPER, nao numa variavel deste arquivo, porque
+-- o ReaPack sobrescreve os scripts ao atualizar e apagaria a preferencia.
+local EXT_SECTION = "PlaythroughKit"
+local EXT_KEY     = "lang"
+
+local function resolveLang()
+  if LANG == "pt" or LANG == "en" then return LANG end
+
+  local saved = reaper.GetExtState(EXT_SECTION, EXT_KEY)
+  if saved == "pt" or saved == "en" then return saved end
+
+  local r = reaper.MB(
+    "Em que idioma voce quer as mensagens do Playthrough Kit?\n" ..
+    "Which language do you want for Playthrough Kit messages?\n\n" ..
+    "SIM / YES  =  Portugues\n" ..
+    "NAO / NO   =  English",
+    "Playthrough Kit", 4)
+
+  local escolha = (r == 6) and "pt" or "en"
+  reaper.SetExtState(EXT_SECTION, EXT_KEY, escolha, true)
+  return escolha
+end
+
+local T = STR[resolveLang()] or STR.en
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }

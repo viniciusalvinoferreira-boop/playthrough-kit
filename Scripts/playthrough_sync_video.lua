@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: sync de video com audio
--- @version 1.6
+-- @version 1.7
 -- @author Vinicius Alvino
 -- @about
 --   Alinha o video da camera com o audio gravado no REAPER, procurando o mesmo
@@ -8,7 +8,7 @@
 
 --[[
   playthrough_sync_video.lua
-  Playthrough Kit v1.6
+  Playthrough Kit v1.7
 
   Toda mensagem de erro tem um codigo [PT-xx]. Procure esse codigo no
   LEIA-ME.md que a causa e o conserto estao la.
@@ -72,8 +72,10 @@ local ENV_BLOCK        = 960   -- 20 ms a 48k, resolucao do envelope
 local VIDEO_AUDIO_OFFSET_MS = 21.3
 -----------------------------------------------------------------------------
 
--- idioma das mensagens: "pt" ou "en" --------------------------------------
-local LANG = "pt"
+-- idioma das mensagens ------------------------------------------------------
+-- "auto" pergunta na primeira vez e guarda a resposta. "pt" ou "en" forcam um
+-- idioma e nunca perguntam nada.
+local LANG = "auto"
 
 local STR = {
   pt = {
@@ -158,7 +160,34 @@ local STR = {
     undo       = "Playthrough: sync video with audio",
   },
 }
-local T = STR[LANG] or STR.en
+-- A escolha vai pro ExtState do REAPER, e nao pra uma variavel no arquivo.
+-- Isso importa porque o ReaPack SOBRESCREVE os scripts ao atualizar: se o
+-- idioma morasse aqui dentro, a preferencia da pessoa seria apagada em toda
+-- atualizacao e ela acharia que o kit quebrou.
+--
+-- Os tres scripts leem a mesma chave, entao a escolha e feita uma vez so.
+local EXT_SECTION = "PlaythroughKit"
+local EXT_KEY     = "lang"
+
+local function resolveLang()
+  if LANG == "pt" or LANG == "en" then return LANG end
+
+  local saved = reaper.GetExtState(EXT_SECTION, EXT_KEY)
+  if saved == "pt" or saved == "en" then return saved end
+
+  local r = reaper.MB(
+    "Em que idioma voce quer as mensagens do Playthrough Kit?\n" ..
+    "Which language do you want for Playthrough Kit messages?\n\n" ..
+    "SIM / YES  =  Portugues\n" ..
+    "NAO / NO   =  English",
+    "Playthrough Kit", 4)
+
+  local escolha = (r == 6) and "pt" or "en"
+  reaper.SetExtState(EXT_SECTION, EXT_KEY, escolha, true)  -- true = persiste
+  return escolha
+end
+
+local T = STR[resolveLang()] or STR.en
 -----------------------------------------------------------------------------
 
 local VIDEO_EXT = { mp4=true, mov=true, m4v=true, mkv=true, avi=true, webm=true }

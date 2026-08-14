@@ -60,11 +60,9 @@ Either way you also need ffmpeg:
 winget install Gyan.FFmpeg
 ```
 
-**Messages in English:** open each script and change the line near the top:
-
-```lua
-local LANG = "pt"   -- change to "en"
-```
+**Language:** on first run the kit asks whether you want messages in Portuguese
+or English and remembers your answer. To change it later, run the
+`Playthrough Kit: idioma` action.
 
 ## Before your first take: the muted-string hit
 

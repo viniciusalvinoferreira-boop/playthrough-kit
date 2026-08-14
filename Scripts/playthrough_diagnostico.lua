@@ -1,5 +1,5 @@
 -- @description Playthrough Kit: diagnostico
--- @version 1.6
+-- @version 1.7
 -- @author Vinicius Alvino
 -- @about
 --   Relatorio de ambiente pra quando algo nao funciona. Nao altera nada no
@@ -7,7 +7,7 @@
 
 --[[
   playthrough_diagnostico.lua
-  Playthrough Kit v1.6
+  Playthrough Kit v1.7
 
   Nao muda nada no seu projeto. Só olha o ambiente e escreve um relatorio no
   console do REAPER.
@@ -25,8 +25,10 @@
     relatorio inclui a analise deles tambem.
 ]]
 
--- idioma das mensagens: "pt" ou "en" --------------------------------------
-local LANG = "pt"
+-- idioma das mensagens ------------------------------------------------------
+-- "auto" usa a escolha guardada (perguntada uma vez pelo kit). "pt" ou "en"
+-- forcam um idioma e nunca perguntam nada.
+local LANG = "auto"
 
 local STR = {
   pt = {
@@ -36,6 +38,8 @@ local STR = {
     reaper    = "REAPER            : ",
     resource  = "Pasta de recursos : ",
     sws       = "SWS instalado     : ",
+    lang      = "Idioma            : ",
+    langHint  = "   (pra trocar, rode a acao 'Playthrough Kit: idioma')",
     installed = "Instalado em      : ",
     unknown   = "nao consegui determinar",
     notFound  = "NAO ENCONTRADO",
@@ -81,6 +85,8 @@ local STR = {
     reaper    = "REAPER            : ",
     resource  = "Resource path     : ",
     sws       = "SWS installed     : ",
+    lang      = "Language          : ",
+    langHint  = "   (to change it, run the action 'Playthrough Kit: idioma')",
     installed = "Installed in      : ",
     unknown   = "could not determine",
     notFound  = "NOT FOUND",
@@ -120,7 +126,31 @@ local STR = {
     foot6     = "   Teste/ ............ two files to validate the install",
   },
 }
-local T = STR[LANG] or STR.en
+-- A escolha mora no ExtState do REAPER, nao numa variavel deste arquivo, porque
+-- o ReaPack sobrescreve os scripts ao atualizar e apagaria a preferencia.
+local EXT_SECTION = "PlaythroughKit"
+local EXT_KEY     = "lang"
+
+local function resolveLang()
+  if LANG == "pt" or LANG == "en" then return LANG end
+
+  local saved = reaper.GetExtState(EXT_SECTION, EXT_KEY)
+  if saved == "pt" or saved == "en" then return saved end
+
+  local r = reaper.MB(
+    "Em que idioma voce quer as mensagens do Playthrough Kit?\n" ..
+    "Which language do you want for Playthrough Kit messages?\n\n" ..
+    "SIM / YES  =  Portugues\n" ..
+    "NAO / NO   =  English",
+    "Playthrough Kit", 4)
+
+  local escolha = (r == 6) and "pt" or "en"
+  reaper.SetExtState(EXT_SECTION, EXT_KEY, escolha, true)
+  return escolha
+end
+
+local LANG_ATUAL = resolveLang()
+local T = STR[LANG_ATUAL] or STR.en
 -----------------------------------------------------------------------------
 
 local L = {}
@@ -222,6 +252,7 @@ local ver = reaper.GetAppVersion()
 say(T.reaper   .. tostring(ver))
 say(T.resource .. reaper.GetResourcePath())
 say(T.sws      .. fmtBool(reaper.APIExists("CF_GetSWSVersion")))
+say(T.lang     .. LANG_ATUAL .. T.langHint)
 say()
 
 -- Os outros scripts do kit ficam na mesma pasta que este aqui, seja ela qual

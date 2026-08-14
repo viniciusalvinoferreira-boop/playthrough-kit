@@ -1,5 +1,26 @@
 # Mudanças
 
+## v1.7
+
+**A escolha de idioma sobrevive às atualizações**
+
+Na v1.6 o idioma era uma constante dentro de cada script. O problema: o ReaPack
+**sobrescreve os arquivos** ao atualizar. Quem trocasse pra inglês perderia a
+configuração na versão seguinte, e concluiria que o kit quebrou.
+
+Agora a escolha vai pro `ExtState` do REAPER, que grava num arquivo de
+configuração separado e sobrevive a qualquer atualização de script. Os quatro
+scripts leem a mesma chave, então a escolha é feita uma vez só.
+
+Na primeira execução de qualquer script, o kit pergunta o idioma. Para trocar
+depois, existe a ação nova **`Playthrough Kit: idioma`**.
+
+A constante no topo continua existindo: com `"pt"` ou `"en"` ela força um
+idioma e nunca pergunta nada. Com `"auto"`, que é o padrão, ela usa a escolha
+guardada.
+
+O relatório do diagnóstico agora mostra qual idioma está ativo.
+
 ## v1.6
 
 **Scripts e documentação em dois idiomas**

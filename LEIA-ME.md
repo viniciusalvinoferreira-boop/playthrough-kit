@@ -1,6 +1,6 @@
 *[Manual in English](MANUAL-en.md)*
 
-# Playthrough Kit v1.6
+# Playthrough Kit v1.7
 
 Gravar vídeo tocando guitarra sem sincronizar áudio na mão, e sem perder
 qualidade na exportação.
@@ -77,12 +77,14 @@ O template já aparece sozinho em `File` → `Project templates` → `Playthroug
 
 ## Idioma das mensagens
 
-Os scripts vêm em português. Pra trocar pra inglês, abra cada um e mude a linha
-do topo:
+Na primeira vez que você rodar qualquer script do kit, ele pergunta se você
+quer as mensagens em português ou inglês, e guarda a resposta.
 
-```lua
-local LANG = "pt"   -- troque pra "en"
-```
+Pra trocar depois, rode a ação **`Playthrough Kit: idioma`**.
+
+A escolha fica guardada na configuração do REAPER, e não dentro dos scripts.
+Isso importa porque o ReaPack sobrescreve os arquivos ao atualizar: se o idioma
+morasse no código, sua preferência seria apagada em toda nova versão.
 
 Os códigos de erro são idênticos nos dois idiomas, então `PT-03` significa a
 mesma coisa de qualquer jeito.

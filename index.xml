@@ -4,7 +4,7 @@
 
     <reapack name="playthrough_sync_video.lua" type="script"
              desc="Playthrough Kit: sync de video com audio">
-      <version name="1.6" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
+      <version name="1.7" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
         <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/main/Scripts/playthrough_sync_video.lua</source>
       </version>
       <metadata>
@@ -18,7 +18,7 @@ Selecione o item de video e o da guitarra, e rode.]]></description>
 
     <reapack name="playthrough_export_mux.lua" type="script"
              desc="Playthrough Kit: export sem re-encode">
-      <version name="1.6" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
+      <version name="1.7" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
         <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/main/Scripts/playthrough_export_mux.lua</source>
       </version>
       <metadata>
@@ -34,7 +34,7 @@ Selecione apenas o item de video, e rode.]]></description>
 
     <reapack name="playthrough_diagnostico.lua" type="script"
              desc="Playthrough Kit: diagnostico">
-      <version name="1.6" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
+      <version name="1.7" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
         <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/main/Scripts/playthrough_diagnostico.lua</source>
       </version>
       <metadata>
@@ -46,9 +46,23 @@ Copie o relatorio inteiro e mande junto com a sua duvida.]]></description>
       </metadata>
     </reapack>
 
+    <reapack name="playthrough_idioma.lua" type="script"
+             desc="Playthrough Kit: idioma / language">
+      <version name="1.7" author="Vinicius Alvino" time="2026-08-14T18:00:00Z">
+        <source main="main">https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/main/Scripts/playthrough_idioma.lua</source>
+      </version>
+      <metadata>
+        <description><![CDATA[Escolhe o idioma das mensagens do Playthrough Kit: portugues ou ingles.
+
+A escolha fica guardada no REAPER e sobrevive as atualizacoes do ReaPack. Os tres scripts do kit leem a mesma configuracao, entao voce escolhe uma vez so.
+
+Chooses the language for Playthrough Kit messages: Portuguese or English. The choice is stored and survives ReaPack updates.]]></description>
+      </metadata>
+    </reapack>
+
     <reapack name="Playthrough.RPP" type="projecttpl"
              desc="Playthrough Kit: template de projeto">
-      <version name="1.6" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
+      <version name="1.7" author="Vinicius Alvino" time="2026-08-14T14:00:00Z">
         <source>https://raw.githubusercontent.com/viniciusalvinoferreira-boop/playthrough-kit/main/ProjectTemplates/Playthrough.RPP</source>
       </version>
       <metadata>
