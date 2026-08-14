@@ -121,11 +121,15 @@ precisar de mais ninguém.
 ## Apoie
 
 O kit é gratuito e continua sendo. Se ele te economizou tempo, você pode me
-pagar um café por Pix:
+pagar um café.
+
+**Pix** (chave aleatória, sem taxa):
 
 ```
 5d7b2734-c80e-48d4-90f8-b7d6e798b6ea
 ```
 
-Vinicius Alvino. Chave aleatória, sem obrigação nenhuma. Reportar um bug ou
-contar que funcionou também ajuda bastante.
+**De fora do Brasil, ou com cartão:** [ko-fi.com/vinialvino](https://ko-fi.com/vinialvino)
+
+Sem obrigação nenhuma. Reportar um bug ou contar que funcionou também ajuda
+bastante.

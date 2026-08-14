@@ -129,6 +129,9 @@ combination solves most cases without anyone else involved.
 
 ## Support
 
-The kit is free and stays free. If it saved you time, you can buy me a coffee.
+The kit is free and stays free. If it saved you time, you can buy me a coffee:
 
-Reporting a bug, or just telling me it worked, helps plenty too.
+**[ko-fi.com/vinialvino](https://ko-fi.com/vinialvino)**
+
+No obligation at all. Reporting a bug, or just telling me it worked, helps
+plenty too.

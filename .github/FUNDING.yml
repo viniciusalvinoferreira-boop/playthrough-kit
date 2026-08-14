@@ -1,0 +1,8 @@
+# Faz aparecer o botao "Sponsor" no topo da pagina do repositorio.
+#
+# ko_fi   : aceita cartao e PayPal, funciona pra quem esta fora do Brasil
+# custom  : leva pra secao de apoio do README, onde esta a chave Pix, que sai
+#           sem taxa pra quem esta no Brasil
+
+ko_fi: vinialvino
+custom: ["https://github.com/viniciusalvinoferreira-boop/playthrough-kit#apoie"]
